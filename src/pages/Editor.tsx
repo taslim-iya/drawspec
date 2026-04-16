@@ -4,15 +4,17 @@ import { Eye, EyeOff, Ruler, Tag, Type, Layers, MessageSquare, Download, Chevron
 import { useDrawingStore } from '@/stores/drawingStore';
 import { templates } from '@/lib/templates';
 import DrawingCanvas from '@/components/DrawingCanvas';
+import ChatPanel from '@/components/ChatPanel';
 import type { Drawing, DrawingSpec } from '@/lib/types';
 
 export default function Editor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { drawings, addDrawing, setActiveDrawing, activeLayers, toggleLayer } = useDrawingStore();
+  const { drawings, addDrawing, updateDrawing, setActiveDrawing, activeLayers, toggleLayer } = useDrawingStore();
   const [textInput, setTextInput] = useState('');
   const [parsing, setParsing] = useState(false);
   const [showPanel, setShowPanel] = useState(true);
+  const [showChat, setShowChat] = useState(true);
 
   const drawing = drawings.find((d) => d.id === id);
 
@@ -163,12 +165,31 @@ export default function Editor() {
 
       {/* Canvas */}
       <div className="flex-1 relative">
-        <button onClick={() => setShowPanel(!showPanel)}
-          className="absolute top-4 left-4 z-20 p-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50">
-          <Layers size={16} className="text-gray-500" />
-        </button>
+        <div className="absolute top-4 left-4 z-20 flex gap-2">
+          <button onClick={() => setShowPanel(!showPanel)}
+            className="p-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50">
+            <Layers size={16} className="text-gray-500" />
+          </button>
+          <button onClick={() => setShowChat(!showChat)}
+            className={`p-2 border rounded-lg shadow-sm transition-colors ${showChat ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+            <MessageSquare size={16} />
+          </button>
+        </div>
         <DrawingCanvas spec={drawing.spec} />
       </div>
+
+      {/* Chat Panel */}
+      {showChat && (
+        <div className="w-80">
+          <ChatPanel
+            spec={drawing.spec}
+            drawingName={drawing.name}
+            onSpecUpdate={(newSpec) => {
+              updateDrawing(drawing.id, { spec: newSpec });
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
