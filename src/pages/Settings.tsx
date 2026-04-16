@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Key, Save } from 'lucide-react';
+import { Key, Save, Check, Info, Trash2, Database } from 'lucide-react';
+import { useDrawingStore } from '@/stores/drawingStore';
 
 export default function Settings() {
   const [apiKey, setApiKey] = useState(localStorage.getItem('drawspec-openai-key') || '');
   const [saved, setSaved] = useState(false);
+  const { drawings } = useDrawingStore();
 
   const save = () => {
     localStorage.setItem('drawspec-openai-key', apiKey);
@@ -11,39 +13,102 @@ export default function Settings() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  return (
-    <div className="max-w-xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Settings</h1>
-      <p className="text-gray-500 text-sm mb-8">Configure your DrawSpec instance.</p>
+  const clearStorage = () => {
+    if (confirm('Clear all drawings and settings? This cannot be undone.')) {
+      localStorage.removeItem('drawspec-store');
+      localStorage.removeItem('drawspec-openai-key');
+      window.location.reload();
+    }
+  };
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
-            <Key size={16} className="text-indigo-600" />
+  return (
+    <div style={{ maxWidth: 560 }} className="animate-fade-in">
+      <div style={{ marginBottom: 40 }}>
+        <p className="font-meta" style={{ marginBottom: 10 }}>Configuration</p>
+        <h1 className="font-headline" style={{ fontSize: 32, color: 'var(--text)', marginBottom: 8 }}>Settings</h1>
+        <p style={{ fontSize: 14, color: 'var(--text-2)', lineHeight: 1.6 }}>
+          Configure API keys and manage your DrawSpec data.
+        </p>
+      </div>
+
+      {/* API Key */}
+      <div className="card" style={{ padding: 24, marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 8,
+            background: 'var(--accent-light)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Key size={16} style={{ color: 'var(--accent)' }} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-900">OpenAI API Key</p>
-            <p className="text-xs text-gray-400">Required for AI text-to-drawing parsing</p>
+            <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em' }}>OpenAI API Key</p>
+            <p style={{ fontSize: 12, color: 'var(--text-3)' }}>Required for AI text-to-drawing and chat editing</p>
           </div>
         </div>
         <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)}
-          placeholder="sk-..."
-          className="w-full p-3 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300" />
-        <button onClick={save}
-          className="mt-3 flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
-          <Save size={14} />
-          {saved ? 'Saved!' : 'Save'}
+          placeholder="sk-proj-..."
+          className="input-premium" style={{ marginBottom: 12, fontFamily: 'var(--font-mono)', fontSize: 12 }} />
+        <button onClick={save} className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+          {saved ? <><Check size={14} /> Saved</> : <><Save size={14} /> Save Key</>}
         </button>
       </div>
 
-      <div className="mt-6 bg-white border border-gray-200 rounded-xl p-6">
-        <p className="text-sm font-semibold text-gray-900 mb-2">About DrawSpec</p>
-        <p className="text-xs text-gray-500 leading-relaxed">
+      {/* Data */}
+      <div className="card" style={{ padding: 24, marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 8,
+            background: 'var(--surface-2)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Database size={16} style={{ color: 'var(--text-2)' }} />
+          </div>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em' }}>Local Storage</p>
+            <p style={{ fontSize: 12, color: 'var(--text-3)' }}>{drawings.length} drawing{drawings.length !== 1 ? 's' : ''} stored locally</p>
+          </div>
+        </div>
+        <button onClick={clearStorage} className="btn-secondary" style={{ width: '100%', justifyContent: 'center', color: 'var(--danger)' }}>
+          <Trash2 size={14} /> Clear All Data
+        </button>
+      </div>
+
+      {/* About */}
+      <div className="card" style={{ padding: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 8,
+            background: 'var(--surface-2)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Info size={16} style={{ color: 'var(--text-2)' }} />
+          </div>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em' }}>About DrawSpec</p>
+            <p style={{ fontSize: 12, color: 'var(--text-3)' }}>v0.1.0</p>
+          </div>
+        </div>
+        <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.7 }}>
           DrawSpec generates engineering technical drawings from natural language specifications.
-          Designed to replace the back-and-forth between designers and BIM/CAD teams — engineers describe what they need,
-          DrawSpec renders it with proper dimensions, annotations, and title blocks.
+          Designed to replace the back-and-forth between designers and BIM/CAD teams.
         </p>
-        <p className="text-xs text-gray-400 mt-3">Version 0.1.0 — Built with React, SVG, and a lot of engineering knowledge.</p>
+        <div style={{ marginTop: 16, display: 'flex', gap: 12 }}>
+          {[
+            { label: 'Text → Drawing', desc: 'AI generation' },
+            { label: 'Chat Editing', desc: 'Modify via NL' },
+            { label: 'DXF Import', desc: 'AutoCAD files' },
+            { label: 'SVG Export', desc: 'Vector output' },
+          ].map((f) => (
+            <div key={f.label} style={{
+              flex: 1, padding: '10px 12px', borderRadius: 'var(--radius-sm)',
+              background: 'var(--surface-2)', textAlign: 'center',
+            }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em' }}>{f.label}</p>
+              <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 2 }}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
