@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Plus, FileText, Clock, PenTool, Upload } from 'lucide-react';
+import { Plus, FileText, Clock, PenTool, ArrowRight, Upload, Sparkles } from 'lucide-react';
 import { useDrawingStore } from '@/stores/drawingStore';
 import { templates } from '@/lib/templates';
 
@@ -7,59 +7,83 @@ export default function Dashboard() {
   const { drawings } = useDrawingStore();
 
   return (
-    <div style={{ maxWidth: 720 }}>
+    <div style={{ maxWidth: 780 }} className="animate-fade-in">
       {/* Hero */}
-      <div style={{ marginBottom: 40 }}>
-        <p className="font-meta" style={{ marginBottom: 8 }}>Engineering Platform</p>
-        <h1 className="font-headline" style={{ fontSize: 'clamp(28px, 4vw, 40px)', color: 'var(--text)', marginBottom: 8, lineHeight: 1.1 }}>DrawSpec</h1>
-        <p style={{ fontSize: 15, color: 'var(--text-2)', lineHeight: 1.6, maxWidth: 500 }}>
-          Engineering drawings from text specifications. Upload DXF files, generate from descriptions, edit with AI chat.
+      <div style={{ marginBottom: 48 }}>
+        <p className="font-meta" style={{ marginBottom: 10 }}>Engineering Platform</p>
+        <h1 className="font-headline" style={{ fontSize: 'clamp(32px, 5vw, 48px)', color: 'var(--text)', marginBottom: 12 }}>
+          DrawSpec
+        </h1>
+        <p style={{ fontSize: 16, color: 'var(--text-2)', lineHeight: 1.7, maxWidth: 520 }}>
+          Technical drawings from text specifications. Upload files, generate from descriptions, edit with AI — no AutoCAD required.
         </p>
       </div>
 
       {/* Actions */}
-      <div className="ruled" style={{ marginBottom: 32 }}>
-        <p className="font-meta" style={{ marginBottom: 16 }}>Quick Actions</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-          <Link to="/editor" className="card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 18, textDecoration: 'none' }}>
-            <div style={{ width: 40, height: 40, borderRadius: 8, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Plus size={18} color="white" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 48 }}>
+        <Link to="/editor" style={{ textDecoration: 'none' }}>
+          <div style={{
+            padding: '22px 20px', borderRadius: 'var(--radius-lg)',
+            background: 'linear-gradient(135deg, var(--accent), var(--accent-hover))',
+            color: 'white', display: 'flex', alignItems: 'center', gap: 16,
+            boxShadow: '0 4px 16px rgba(99,91,255,0.25)',
+            transition: 'all 0.2s', cursor: 'pointer',
+          }}>
+            <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)' }}>
+              <Plus size={20} />
             </div>
             <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>New Drawing</p>
-              <p style={{ fontSize: 11, color: 'var(--text-3)' }}>Text, upload, or template</p>
+              <p style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.01em' }}>New Drawing</p>
+              <p style={{ fontSize: 12, opacity: 0.8 }}>Text, upload, or template</p>
             </div>
-          </Link>
-          <Link to="/editor/demo-fst" className="card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 18, textDecoration: 'none' }}>
-            <div style={{ width: 40, height: 40, borderRadius: 8, background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <PenTool size={18} style={{ color: 'var(--accent)' }} />
-            </div>
-            <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Demo: FST</p>
-              <p style={{ fontSize: 11, color: 'var(--text-3)' }}>25m settlement tank</p>
-            </div>
-          </Link>
-        </div>
+          </div>
+        </Link>
+
+        <Link to="/editor/demo-fst" className="card" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '22px 20px', textDecoration: 'none' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <PenTool size={18} style={{ color: 'var(--accent)' }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em' }}>Demo: FST</p>
+            <p style={{ fontSize: 12, color: 'var(--text-3)' }}>25m settlement tank</p>
+          </div>
+          <ArrowRight size={14} style={{ color: 'var(--text-3)' }} />
+        </Link>
+
+        <Link to="/templates" className="card" style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '22px 20px', textDecoration: 'none' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <FileText size={18} style={{ color: 'var(--text-2)' }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em' }}>Templates</p>
+            <p style={{ fontSize: 12, color: 'var(--text-3)' }}>{templates.length} engineering templates</p>
+          </div>
+          <ArrowRight size={14} style={{ color: 'var(--text-3)' }} />
+        </Link>
       </div>
 
-      {/* Recent */}
-      <div className="ruled">
-        <p className="font-meta" style={{ marginBottom: 16 }}>Recent Drawings</p>
+      {/* Recent Drawings */}
+      <div className="ruled" style={{ marginBottom: 48 }}>
+        <p className="font-meta" style={{ marginBottom: 18 }}>Recent Drawings</p>
         {drawings.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 0', border: '2px dashed var(--border)', borderRadius: 12 }}>
-            <FileText size={28} style={{ color: 'var(--text-3)', margin: '0 auto 12px' }} />
+          <div style={{ textAlign: 'center', padding: '56px 0', border: '1px dashed var(--border)', borderRadius: 'var(--radius-lg)', background: 'var(--bg)' }}>
+            <FileText size={28} style={{ color: 'var(--text-3)', margin: '0 auto 12px', opacity: 0.5 }} />
             <p style={{ fontSize: 13, color: 'var(--text-3)' }}>No drawings yet</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {drawings.map((d) => (
               <Link key={d.id} to={`/editor/${d.id}`} className="card"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', textDecoration: 'none' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <FileText size={16} style={{ color: 'var(--text-3)' }} />
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', textDecoration: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <FileText size={15} style={{ color: 'var(--text-3)' }} />
+                  </div>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{d.name}</p>
-                    <p style={{ fontSize: 11, color: 'var(--text-3)' }}>{d.spec.views.length} view(s) · {d.spec.titleBlock.drawingNo}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em' }}>{d.name}</p>
+                    <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>
+                      {d.spec.views.length} view{d.spec.views.length !== 1 ? 's' : ''} · {d.spec.titleBlock.drawingNo} · Rev {d.spec.titleBlock.revision}
+                    </p>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-3)' }}>
@@ -72,23 +96,25 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Features */}
-      <div className="ruled" style={{ marginTop: 32 }}>
-        <p className="font-meta" style={{ marginBottom: 16 }}>What Else Would Make This Useful</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      {/* Capabilities */}
+      <div className="ruled">
+        <p className="font-meta" style={{ marginBottom: 18 }}>Capabilities</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
           {[
-            { title: 'Real-time Collaboration', desc: 'Multiple engineers on the same drawing simultaneously' },
-            { title: 'Version History', desc: 'Track every change with full revision control' },
-            { title: 'PDF Export', desc: 'A3/A1 sheets with proper engineering borders' },
-            { title: 'DXF Export', desc: 'Export back to AutoCAD-compatible format' },
-            { title: 'Component Library', desc: 'Drag standard components (valves, pumps, fittings)' },
-            { title: 'Measurement Tools', desc: 'Click-to-measure distances and angles on drawings' },
-            { title: 'Annotation Mode', desc: 'Markup and comment on drawings for review' },
-            { title: 'Calculation Sheets', desc: 'Linked design calculations (flow rates, loads)' },
+            { icon: '✏️', title: 'Text to Drawing', desc: 'Describe in plain English, get a technical drawing' },
+            { icon: '📁', title: 'File Import', desc: 'DXF, DWG, PDF, SVG, PNG, JPG' },
+            { icon: '💬', title: 'Chat Editing', desc: 'Modify drawings via natural language' },
+            { icon: '📐', title: 'Dimensions Panel', desc: 'Edit dims, offsets, and title block directly' },
+            { icon: '🔄', title: 'SVG Export', desc: 'Export production-ready vector drawings' },
+            { icon: '🌙', title: 'Dark Mode', desc: 'Comfortable viewing in any lighting' },
           ].map((f) => (
-            <div key={f.title} style={{ padding: '12px 16px', border: '1px solid var(--border-light)', borderRadius: 8 }}>
-              <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{f.title}</p>
-              <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>{f.desc}</p>
+            <div key={f.title} style={{
+              padding: '16px 18px', borderRadius: 'var(--radius-md)',
+              background: 'var(--bg)', border: '1px solid var(--border-subtle)',
+            }}>
+              <span style={{ fontSize: 18 }}>{f.icon}</span>
+              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', marginTop: 8, letterSpacing: '-0.01em' }}>{f.title}</p>
+              <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 3, lineHeight: 1.5 }}>{f.desc}</p>
             </div>
           ))}
         </div>

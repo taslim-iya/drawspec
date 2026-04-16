@@ -20,7 +20,7 @@ export default function ChatPanel({ spec, onSpecUpdate, drawingName }: Props) {
     {
       id: 'welcome',
       role: 'system',
-      content: `Editing "${drawingName}". Describe changes in plain English — I'll update the drawing.\n\nExamples:\n• "Make the walls 300mm thick"\n• "Add a second outlet on the north side"\n• "Change the floor slope to 10°"\n• "Add a label for the scraper mechanism"`,
+      content: `Editing "${drawingName}".\n\nDescribe changes:\n• "Make walls 300mm"\n• "Add outlet on north side"\n• "Change slope to 10°"\n• "Add label for scraper"`,
       timestamp: Date.now(),
     },
   ]);
@@ -53,96 +53,103 @@ export default function ChatPanel({ spec, onSpecUpdate, drawingName }: Props) {
       const data = await res.json();
 
       if (data.error) {
-        setMessages((prev) => [
-          ...prev,
-          { id: `msg-${Date.now()}`, role: 'assistant', content: `⚠️ ${data.error}`, timestamp: Date.now() },
-        ]);
+        setMessages((prev) => [...prev, { id: `msg-${Date.now()}`, role: 'assistant', content: data.error, timestamp: Date.now() }]);
       } else if (data.updatedSpec) {
         onSpecUpdate(data.updatedSpec);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `msg-${Date.now()}`,
-            role: 'assistant',
-            content: data.explanation || 'Drawing updated.',
-            timestamp: Date.now(),
-          },
-        ]);
+        setMessages((prev) => [...prev, { id: `msg-${Date.now()}`, role: 'assistant', content: data.explanation || 'Drawing updated.', timestamp: Date.now() }]);
       } else if (data.explanation) {
-        setMessages((prev) => [
-          ...prev,
-          { id: `msg-${Date.now()}`, role: 'assistant', content: data.explanation, timestamp: Date.now() },
-        ]);
+        setMessages((prev) => [...prev, { id: `msg-${Date.now()}`, role: 'assistant', content: data.explanation, timestamp: Date.now() }]);
       }
-    } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        { id: `msg-${Date.now()}`, role: 'assistant', content: '⚠️ Failed to process. Try again.', timestamp: Date.now() },
-      ]);
+    } catch {
+      setMessages((prev) => [...prev, { id: `msg-${Date.now()}`, role: 'assistant', content: 'Failed to process. Try again.', timestamp: Date.now() }]);
     } finally {
       setLoading(false);
       inputRef.current?.focus();
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
   return (
-    <div className="flex flex-col h-full bg-white border-l border-gray-200">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--surface)', borderLeft: '1px solid var(--border)' }}>
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Sparkles size={14} className="text-indigo-500" />
-          <span className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Edit by Chat</span>
+      <div className="panel-section" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 24, height: 24, borderRadius: 6, background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Sparkles size={12} style={{ color: 'var(--accent)' }} />
+          </div>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.01em' }}>AI Editor</span>
         </div>
         <button onClick={() => setMessages((prev) => prev.filter((m) => m.role === 'system'))}
-          className="p-1.5 text-gray-400 hover:text-gray-600 rounded" title="Clear chat">
-          <Trash2 size={13} />
-        </button>
+          className="btn-ghost" style={{ padding: 4, color: 'var(--text-3)' }}><Trash2 size={13} /></button>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-        {messages.map((msg) => (
-          <div key={msg.id} className={`${msg.role === 'user' ? 'flex justify-end' : ''}`}>
-            <div className={`max-w-[90%] rounded-xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
-              msg.role === 'user'
-                ? 'bg-indigo-600 text-white'
-                : msg.role === 'system'
-                ? 'bg-gray-50 text-gray-500 border border-gray-100'
-                : 'bg-gray-50 text-gray-800 border border-gray-100'
-            }`}>
-              <p className="whitespace-pre-wrap">{msg.content}</p>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {messages.map((msg) => (
+            <div key={msg.id} className="animate-fade-in" style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+              <div style={{
+                maxWidth: '88%', borderRadius: 12, padding: '10px 14px',
+                fontSize: 13, lineHeight: 1.6, letterSpacing: '-0.01em',
+                ...(msg.role === 'user' ? {
+                  background: 'var(--accent)', color: 'white',
+                  borderBottomRightRadius: 4,
+                  boxShadow: '0 1px 4px rgba(99,91,255,0.2)',
+                } : msg.role === 'system' ? {
+                  background: 'var(--surface-2)', color: 'var(--text-3)',
+                  border: '1px solid var(--border-subtle)',
+                  fontSize: 12,
+                } : {
+                  background: 'var(--surface-2)', color: 'var(--text)',
+                  border: '1px solid var(--border-subtle)',
+                  borderBottomLeftRadius: 4,
+                }),
+              }}>
+                <p style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</p>
+              </div>
             </div>
-          </div>
-        ))}
-        {loading && (
-          <div className="flex items-center gap-2 text-gray-400 text-xs">
-            <Loader2 size={12} className="animate-spin" />
-            Updating drawing...
-          </div>
-        )}
-        <div ref={bottomRef} />
+          ))}
+          {loading && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0' }}>
+              <div className="animate-pulse" style={{ display: 'flex', gap: 4 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', opacity: 0.6 }} />
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', opacity: 0.4 }} />
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', opacity: 0.2 }} />
+              </div>
+              <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Updating drawing...</span>
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </div>
       </div>
 
       {/* Input */}
-      <div className="px-3 py-3 border-t border-gray-100">
-        <div className="flex items-end gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-300">
+      <div style={{ padding: '12px 14px', borderTop: '1px solid var(--border-subtle)' }}>
+        <div style={{
+          display: 'flex', alignItems: 'flex-end', gap: 8,
+          background: 'var(--bg-alt)', border: '1px solid var(--border)',
+          borderRadius: 10, padding: '10px 12px',
+          transition: 'all 0.2s',
+        }}>
           <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
             placeholder="Describe a change..."
             rows={1}
-            className="flex-1 bg-transparent text-sm resize-none outline-none max-h-24 text-gray-900 placeholder-gray-400"
-            style={{ minHeight: 24 }}
+            style={{
+              flex: 1, background: 'transparent', fontSize: 13, resize: 'none', outline: 'none',
+              maxHeight: 96, minHeight: 24, color: 'var(--text)', border: 'none',
+              fontFamily: 'var(--font-body)',
+            }}
           />
           <button onClick={sendMessage} disabled={loading || !input.trim()}
-            className="p-1.5 text-indigo-600 hover:text-indigo-700 disabled:text-gray-300 transition-colors">
-            <Send size={16} />
+            style={{
+              width: 30, height: 30, borderRadius: 8, border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: input.trim() ? 'var(--accent)' : 'var(--surface-hover)',
+              color: input.trim() ? 'white' : 'var(--text-3)',
+              transition: 'all 0.15s',
+              opacity: loading ? 0.5 : 1,
+            }}>
+            <Send size={14} />
           </button>
         </div>
       </div>
