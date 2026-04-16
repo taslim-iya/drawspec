@@ -1,1 +1,111 @@
 @import "tailwindcss";
+
+/* WPDS-inspired design system — white + dark toggle */
+:root {
+  /* Typography */
+  --font-headline: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-meta: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Mono', monospace;
+
+  /* Light theme */
+  --bg: #ffffff;
+  --bg-alt: #f8f9fa;
+  --surface: #ffffff;
+  --surface-2: #f4f5f6;
+  --border: #e2e4e8;
+  --border-light: #f0f1f3;
+  --text: #1a1a2e;
+  --text-2: #4a4a5a;
+  --text-3: #8a8a9a;
+  --accent: #635bff;
+  --accent-light: #f0effe;
+  --accent-2: #059669;
+  --danger: #dc2626;
+  --outline: #d1d5db;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+  --space-2xl: 64px;
+}
+
+.dark {
+  --bg: #0a0a0f;
+  --bg-alt: #111118;
+  --surface: #16161f;
+  --surface-2: #1e1e2a;
+  --border: #2a2a3a;
+  --border-light: #1e1e2a;
+  --text: #f0f0f5;
+  --text-2: #a0a0b0;
+  --text-3: #6a6a7a;
+  --accent: #7c75ff;
+  --accent-light: #1a1830;
+  --accent-2: #34d399;
+  --danger: #f87171;
+  --outline: #3a3a4a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-family: var(--font-body); color: var(--text); background: var(--bg); }
+
+/* WPDS Typography */
+.font-headline { font-family: var(--font-headline); font-weight: 700; letter-spacing: -0.02em; }
+.font-meta { font-family: var(--font-meta); font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-3); font-weight: 600; }
+.font-mono { font-family: var(--font-mono); }
+
+/* Ruled sections */
+.ruled { border-top: 1px solid var(--border); padding-top: var(--space-md); }
+.ruled-bottom { border-bottom: 1px solid var(--border); padding-bottom: var(--space-md); }
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+.card:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+
+/* Buttons */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; font-size: 13px; font-weight: 600;
+  background: var(--accent); color: white; border: none; border-radius: 6px;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; font-size: 13px; font-weight: 500;
+  background: var(--surface); color: var(--text-2); border: 1px solid var(--border);
+  border-radius: 6px; cursor: pointer; transition: all 0.15s;
+}
+.btn-secondary:hover { background: var(--bg-alt); border-color: var(--accent); color: var(--text); }
+
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; font-size: 13px; font-weight: 500;
+  background: none; color: var(--text-3); border: none;
+  border-radius: 6px; cursor: pointer; transition: all 0.15s;
+}
+.btn-ghost:hover { color: var(--text); background: var(--bg-alt); }
+
+/* Badge */
+.badge {
+  display: inline-flex; padding: 2px 8px; font-size: 11px; font-weight: 600;
+  border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;
+}
+
+/* Animations */
+@keyframes spin { to { transform: rotate(360deg); } }
+.animate-spin { animation: spin 1s linear infinite; }
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');

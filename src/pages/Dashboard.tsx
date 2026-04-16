@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Plus, FileText, Clock, PenTool } from 'lucide-react';
+import { Plus, FileText, Clock, PenTool, Upload } from 'lucide-react';
 import { useDrawingStore } from '@/stores/drawingStore';
 import { templates } from '@/lib/templates';
 
@@ -7,74 +7,91 @@ export default function Dashboard() {
   const { drawings } = useDrawingStore();
 
   return (
-    <div className="max-w-5xl">
+    <div style={{ maxWidth: 720 }}>
       {/* Hero */}
-      <div className="mb-10">
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-2">DrawSpec</h1>
-        <p className="text-gray-500 text-base">Engineering drawings from text specifications. No AutoCAD required.</p>
+      <div style={{ marginBottom: 40 }}>
+        <p className="font-meta" style={{ marginBottom: 8 }}>Engineering Platform</p>
+        <h1 className="font-headline" style={{ fontSize: 'clamp(28px, 4vw, 40px)', color: 'var(--text)', marginBottom: 8, lineHeight: 1.1 }}>DrawSpec</h1>
+        <p style={{ fontSize: 15, color: 'var(--text-2)', lineHeight: 1.6, maxWidth: 500 }}>
+          Engineering drawings from text specifications. Upload DXF files, generate from descriptions, edit with AI chat.
+        </p>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-        <Link to="/editor" className="group flex items-center gap-4 p-5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors">
-          <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-            <Plus size={20} />
-          </div>
-          <div>
-            <p className="font-semibold text-sm">New Drawing</p>
-            <p className="text-indigo-200 text-xs">From text or template</p>
-          </div>
-        </Link>
-        <Link to="/editor/demo-fst" className="group flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all">
-          <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-            <PenTool size={20} />
-          </div>
-          <div>
-            <p className="font-semibold text-sm text-gray-900">Demo: FST Drawing</p>
-            <p className="text-gray-400 text-xs">25m diameter settlement tank</p>
-          </div>
-        </Link>
-        <Link to="/templates" className="group flex items-center gap-4 p-5 bg-white border border-gray-200 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all">
-          <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <FileText size={20} />
-          </div>
-          <div>
-            <p className="font-semibold text-sm text-gray-900">Browse Templates</p>
-            <p className="text-gray-400 text-xs">{templates.length} engineering templates</p>
-          </div>
-        </Link>
+      {/* Actions */}
+      <div className="ruled" style={{ marginBottom: 32 }}>
+        <p className="font-meta" style={{ marginBottom: 16 }}>Quick Actions</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+          <Link to="/editor" className="card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 18, textDecoration: 'none' }}>
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Plus size={18} color="white" />
+            </div>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>New Drawing</p>
+              <p style={{ fontSize: 11, color: 'var(--text-3)' }}>Text, upload, or template</p>
+            </div>
+          </Link>
+          <Link to="/editor/demo-fst" className="card" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 18, textDecoration: 'none' }}>
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: 'var(--accent-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <PenTool size={18} style={{ color: 'var(--accent)' }} />
+            </div>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Demo: FST</p>
+              <p style={{ fontSize: 11, color: 'var(--text-3)' }}>25m settlement tank</p>
+            </div>
+          </Link>
+        </div>
       </div>
 
-      {/* Recent Drawings */}
-      <div>
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Recent Drawings</h2>
+      {/* Recent */}
+      <div className="ruled">
+        <p className="font-meta" style={{ marginBottom: 16 }}>Recent Drawings</p>
         {drawings.length === 0 ? (
-          <div className="text-center py-16 border border-dashed border-gray-200 rounded-xl">
-            <FileText size={32} className="mx-auto text-gray-300 mb-3" />
-            <p className="text-gray-400 text-sm">No drawings yet. Create one from a template or text spec.</p>
+          <div style={{ textAlign: 'center', padding: '48px 0', border: '2px dashed var(--border)', borderRadius: 12 }}>
+            <FileText size={28} style={{ color: 'var(--text-3)', margin: '0 auto 12px' }} />
+            <p style={{ fontSize: 13, color: 'var(--text-3)' }}>No drawings yet</p>
           </div>
         ) : (
-          <div className="grid gap-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {drawings.map((d) => (
-              <Link key={d.id} to={`/editor/${d.id}`}
-                className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl hover:border-indigo-300 hover:shadow-sm transition-all">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
-                    <FileText size={18} className="text-gray-400" />
-                  </div>
+              <Link key={d.id} to={`/editor/${d.id}`} className="card"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', textDecoration: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <FileText size={16} style={{ color: 'var(--text-3)' }} />
                   <div>
-                    <p className="font-semibold text-sm text-gray-900">{d.name}</p>
-                    <p className="text-xs text-gray-400">{d.description?.slice(0, 80)}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{d.name}</p>
+                    <p style={{ fontSize: 11, color: 'var(--text-3)' }}>{d.spec.views.length} view(s) · {d.spec.titleBlock.drawingNo}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <Clock size={12} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-3)' }}>
+                  <Clock size={11} />
                   {new Date(d.updatedAt).toLocaleDateString()}
                 </div>
               </Link>
             ))}
           </div>
         )}
+      </div>
+
+      {/* Features */}
+      <div className="ruled" style={{ marginTop: 32 }}>
+        <p className="font-meta" style={{ marginBottom: 16 }}>What Else Would Make This Useful</p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {[
+            { title: 'Real-time Collaboration', desc: 'Multiple engineers on the same drawing simultaneously' },
+            { title: 'Version History', desc: 'Track every change with full revision control' },
+            { title: 'PDF Export', desc: 'A3/A1 sheets with proper engineering borders' },
+            { title: 'DXF Export', desc: 'Export back to AutoCAD-compatible format' },
+            { title: 'Component Library', desc: 'Drag standard components (valves, pumps, fittings)' },
+            { title: 'Measurement Tools', desc: 'Click-to-measure distances and angles on drawings' },
+            { title: 'Annotation Mode', desc: 'Markup and comment on drawings for review' },
+            { title: 'Calculation Sheets', desc: 'Linked design calculations (flow rates, loads)' },
+          ].map((f) => (
+            <div key={f.title} style={{ padding: '12px 16px', border: '1px solid var(--border-light)', borderRadius: 8 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{f.title}</p>
+              <p style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2 }}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
