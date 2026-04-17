@@ -18,7 +18,17 @@ const fstSpec: DrawingSpec = {
         { type: 'line', x1: 400, y1: 300, x2: 580, y2: 200, stroke: '#64748b', strokeWidth: 1, dashed: true },
         { type: 'line', x1: 390, y1: 300, x2: 410, y2: 300, stroke: '#1a1a2e', strokeWidth: 0.5 },
         { type: 'line', x1: 400, y1: 290, x2: 400, y2: 310, stroke: '#1a1a2e', strokeWidth: 0.5 },
-        { type: 'line', x1: 140, y1: 300, x2: 660, y2: 300, stroke: '#dc2626', strokeWidth: 1.5, dashed: true },
+        // Section cut line A-A (BS 8888 Type G: chain with thickened ends)
+        { type: 'line', x1: 160, y1: 300, x2: 640, y2: 300, stroke: '#dc2626', strokeWidth: 0.5, dashed: true },
+        { type: 'line', x1: 140, y1: 300, x2: 165, y2: 300, stroke: '#dc2626', strokeWidth: 2 },
+        { type: 'line', x1: 635, y1: 300, x2: 660, y2: 300, stroke: '#dc2626', strokeWidth: 2 },
+        // Direction arrows (pointing down — looking at bottom half)
+        { type: 'line', x1: 140, y1: 302, x2: 140, y2: 326, stroke: '#1a1a2e', strokeWidth: 2 },
+        { type: 'line', x1: 660, y1: 302, x2: 660, y2: 326, stroke: '#1a1a2e', strokeWidth: 2 },
+        { type: 'line', x1: 134, y1: 318, x2: 140, y2: 328, stroke: '#1a1a2e', strokeWidth: 1.5 },
+        { type: 'line', x1: 146, y1: 318, x2: 140, y2: 328, stroke: '#1a1a2e', strokeWidth: 1.5 },
+        { type: 'line', x1: 654, y1: 318, x2: 660, y2: 328, stroke: '#1a1a2e', strokeWidth: 1.5 },
+        { type: 'line', x1: 666, y1: 318, x2: 660, y2: 328, stroke: '#1a1a2e', strokeWidth: 1.5 },
       ],
       dimensions: [
         { id: 'd1', type: 'diameter', x1: 175, y1: 300, x2: 625, y2: 300, offset: -260, text: 'Ø25,000', unit: 'mm' },
@@ -26,8 +36,8 @@ const fstSpec: DrawingSpec = {
         { id: 'd3', type: 'linear', x1: 615, y1: 293, x2: 640, y2: 293, offset: 30, text: 'OUTLET DN400' },
       ],
       labels: [
-        { id: 'l1', x: 130, y: 300, text: 'A', fontSize: 18 },
-        { id: 'l2', x: 670, y: 300, text: 'A', fontSize: 18 },
+        { id: 'l1', x: 140, y: 345, text: 'A', fontSize: 16 },
+        { id: 'l2', x: 660, y: 345, text: 'A', fontSize: 16 },
         { id: 'l3', x: 400, y: 570, text: 'PLAN VIEW', fontSize: 14 },
         { id: 'l4', x: 540, y: 220, text: 'SCRAPER ARM', fontSize: 9, leaderX: 490, leaderY: 250 },
         { id: 'l5', x: 400, y: 270, text: 'CENTRAL\nCOLUMN', fontSize: 8 },
@@ -40,21 +50,22 @@ const fstSpec: DrawingSpec = {
       x: 80, y: 620, scale: 0.018,
       shapes: [
         { type: 'line', x1: 120, y1: 200, x2: 680, y2: 200, stroke: '#94a3b8', strokeWidth: 0.5, dashed: true },
-        { type: 'rect', x: 175, y: 100, w: 12, h: 200, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
-        { type: 'rect', x: 613, y: 100, w: 12, h: 200, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
-        { type: 'polyline', points: [[187, 300], [187, 290], [395, 340], [395, 350]], fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2, closed: true },
-        { type: 'polyline', points: [[613, 300], [613, 290], [405, 340], [405, 350]], fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2, closed: true },
+        // Left wall (concrete fill — 45° hatching)
+        { type: 'rect', x: 175, y: 100, w: 12, h: 200, fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2 },
+        // Right wall
+        { type: 'rect', x: 613, y: 100, w: 12, h: 200, fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2 },
+        // Floor sloped left
+        { type: 'polyline', points: [[187, 300], [187, 290], [395, 340], [395, 350]], fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2, closed: true },
+        // Floor sloped right
+        { type: 'polyline', points: [[613, 300], [613, 290], [405, 340], [405, 350]], fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2, closed: true },
+        // Central sump
         { type: 'rect', x: 385, y: 340, w: 30, h: 25, fill: '#e2e8f0', stroke: '#1a1a2e', strokeWidth: 2 },
-        { type: 'line', x1: 187, y1: 140, x2: 613, y2: 140, stroke: '#3b82f6', strokeWidth: 1, dashed: true },
+        // Water level (BS 8888: chain line for levels)
+        { type: 'line', x1: 187, y1: 140, x2: 613, y2: 140, stroke: '#3b82f6', strokeWidth: 0.8, dashed: true },
+        // Top slab
         { type: 'line', x1: 187, y1: 100, x2: 613, y2: 100, stroke: '#1a1a2e', strokeWidth: 2 },
-        { type: 'rect', x: 393, y: 80, w: 14, h: 270, fill: '#e2e8f0', stroke: '#1a1a2e', strokeWidth: 1.5 },
-        { type: 'line', x1: 175, y1: 110, x2: 187, y2: 100, stroke: '#94a3b8', strokeWidth: 0.5 },
-        { type: 'line', x1: 175, y1: 140, x2: 187, y2: 130, stroke: '#94a3b8', strokeWidth: 0.5 },
-        { type: 'line', x1: 175, y1: 170, x2: 187, y2: 160, stroke: '#94a3b8', strokeWidth: 0.5 },
-        { type: 'line', x1: 175, y1: 200, x2: 187, y2: 190, stroke: '#94a3b8', strokeWidth: 0.5 },
-        { type: 'line', x1: 175, y1: 230, x2: 187, y2: 220, stroke: '#94a3b8', strokeWidth: 0.5 },
-        { type: 'line', x1: 175, y1: 260, x2: 187, y2: 250, stroke: '#94a3b8', strokeWidth: 0.5 },
-        { type: 'line', x1: 175, y1: 290, x2: 187, y2: 280, stroke: '#94a3b8', strokeWidth: 0.5 },
+        // Central column
+        { type: 'rect', x: 393, y: 80, w: 14, h: 270, fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 1.5 },
       ],
       dimensions: [
         { id: 's1', type: 'linear', x1: 175, y1: 100, x2: 625, y2: 100, offset: -40, text: '25,000' },
@@ -122,7 +133,7 @@ const pipeSectionSpec: DrawingSpec = {
   views: [{
     id: 'section', type: 'section', label: 'PIPE CROSS-SECTION', x: 150, y: 80, scale: 0.5,
     shapes: [
-      { type: 'circle', cx: 400, cy: 300, r: 180, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2.5 },
+      { type: 'circle', cx: 400, cy: 300, r: 180, fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2.5 },
       { type: 'circle', cx: 400, cy: 300, r: 150, fill: '#ffffff', stroke: '#1a1a2e', strokeWidth: 2 },
       { type: 'line', x1: 400, y1: 295, x2: 400, y2: 305, stroke: '#1a1a2e', strokeWidth: 0.5 },
       { type: 'line', x1: 395, y1: 300, x2: 405, y2: 300, stroke: '#1a1a2e', strokeWidth: 0.5 },
@@ -152,11 +163,11 @@ const steelBeamSpec: DrawingSpec = {
     id: 'section', type: 'section', label: 'BEAM CROSS-SECTION', x: 100, y: 60, scale: 0.8,
     shapes: [
       // Top flange
-      { type: 'rect', x: 300, y: 120, w: 200, h: 18, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
+      { type: 'rect', x: 300, y: 120, w: 200, h: 18, fill: 'url(#hatch-steel)', stroke: '#1a1a2e', strokeWidth: 2 },
       // Bottom flange
-      { type: 'rect', x: 300, y: 462, w: 200, h: 18, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
+      { type: 'rect', x: 300, y: 462, w: 200, h: 18, fill: 'url(#hatch-steel)', stroke: '#1a1a2e', strokeWidth: 2 },
       // Web
-      { type: 'rect', x: 392, y: 138, w: 16, h: 324, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 1.5 },
+      { type: 'rect', x: 392, y: 138, w: 16, h: 324, fill: 'url(#hatch-steel)', stroke: '#1a1a2e', strokeWidth: 1.5 },
       // Fillet radii (simplified as small lines)
       { type: 'line', x1: 392, y1: 138, x2: 384, y2: 146, stroke: '#1a1a2e', strokeWidth: 1 },
       { type: 'line', x1: 408, y1: 138, x2: 416, y2: 146, stroke: '#1a1a2e', strokeWidth: 1 },
@@ -235,14 +246,14 @@ const manholeSpec: DrawingSpec = {
         // Cover frame
         { type: 'rect', x: 370, y: 92, w: 60, h: 12, fill: '#64748b', stroke: '#1a1a2e', strokeWidth: 2 },
         // Cone / reducing section
-        { type: 'polyline', points: [[280, 130], [370, 104], [370, 130]], fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2, closed: true },
-        { type: 'polyline', points: [[520, 130], [430, 104], [430, 130]], fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2, closed: true },
+        { type: 'polyline', points: [[280, 130], [370, 104], [370, 130]], fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2, closed: true },
+        { type: 'polyline', points: [[520, 130], [430, 104], [430, 130]], fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2, closed: true },
         // Left wall
-        { type: 'rect', x: 268, y: 130, w: 12, h: 200, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
+        { type: 'rect', x: 268, y: 130, w: 12, h: 200, fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2 },
         // Right wall
-        { type: 'rect', x: 520, y: 130, w: 12, h: 200, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
+        { type: 'rect', x: 520, y: 130, w: 12, h: 200, fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2 },
         // Base slab
-        { type: 'rect', x: 268, y: 330, w: 264, h: 20, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
+        { type: 'rect', x: 268, y: 330, w: 264, h: 20, fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2 },
         // Benching
         { type: 'polyline', points: [[280, 330], [280, 290], [360, 280], [360, 330]], fill: '#e2e8f0', stroke: '#1a1a2e', strokeWidth: 1.5, closed: true },
         { type: 'polyline', points: [[520, 330], [520, 290], [440, 280], [440, 330]], fill: '#e2e8f0', stroke: '#1a1a2e', strokeWidth: 1.5, closed: true },
@@ -283,11 +294,11 @@ const retainingWallSpec: DrawingSpec = {
     id: 'section', type: 'section', label: 'TYPICAL SECTION', x: 80, y: 60, scale: 0.05,
     shapes: [
       // Stem
-      { type: 'polyline', points: [[340, 100], [360, 100], [370, 420], [330, 420]], fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2, closed: true },
+      { type: 'polyline', points: [[340, 100], [360, 100], [370, 420], [330, 420]], fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2, closed: true },
       // Base slab (toe + heel)
-      { type: 'rect', x: 200, y: 420, w: 400, h: 40, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
+      { type: 'rect', x: 200, y: 420, w: 400, h: 40, fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2 },
       // Key
-      { type: 'rect', x: 320, y: 460, w: 40, h: 30, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 1.5 },
+      { type: 'rect', x: 320, y: 460, w: 40, h: 30, fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 1.5 },
       // Ground behind wall (retained earth)
       { type: 'polyline', points: [[360, 100], [700, 100], [700, 420], [370, 420]], fill: 'none', stroke: '#94a3b8', strokeWidth: 0.5, dashed: true, closed: false },
       // Earth hatch lines
@@ -347,13 +358,13 @@ const pumpStationSpec: DrawingSpec = {
       // Ground line
       { type: 'line', x1: 100, y1: 120, x2: 700, y2: 120, stroke: '#94a3b8', strokeWidth: 1, dashed: true },
       // Left wall
-      { type: 'rect', x: 200, y: 100, w: 15, h: 360, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
+      { type: 'rect', x: 200, y: 100, w: 15, h: 360, fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2 },
       // Right wall
-      { type: 'rect', x: 585, y: 100, w: 15, h: 360, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
+      { type: 'rect', x: 585, y: 100, w: 15, h: 360, fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2 },
       // Base slab
-      { type: 'rect', x: 200, y: 440, w: 400, h: 20, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
+      { type: 'rect', x: 200, y: 440, w: 400, h: 20, fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2 },
       // Top slab with hatches
-      { type: 'rect', x: 200, y: 100, w: 400, h: 15, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
+      { type: 'rect', x: 200, y: 100, w: 400, h: 15, fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2 },
       // Access hatch
       { type: 'rect', x: 360, y: 95, w: 80, h: 20, fill: '#64748b', stroke: '#1a1a2e', strokeWidth: 2 },
       // High water level
@@ -418,12 +429,22 @@ const officeFloorPlanSpec: DrawingSpec = {
       { type: 'line', x1: 220, y1: 350, x2: 220, y2: 500, stroke: '#1a1a2e', strokeWidth: 2 },
       // Kitchen partition
       { type: 'line', x1: 220, y1: 350, x2: 350, y2: 350, stroke: '#1a1a2e', strokeWidth: 2 },
-      // Front door
-      { type: 'line', x1: 200, y1: 100, x2: 280, y2: 100, stroke: '#3b82f6', strokeWidth: 3 },
-      // Door arcs (simplified)
-      { type: 'line', x1: 350, y1: 200, x2: 350, y2: 250, stroke: '#3b82f6', strokeWidth: 3 },
-      { type: 'line', x1: 500, y1: 350, x2: 560, y2: 350, stroke: '#3b82f6', strokeWidth: 3 },
-      { type: 'line', x1: 150, y1: 350, x2: 190, y2: 350, stroke: '#3b82f6', strokeWidth: 3 },
+      // Front door — opening in wall + 90° swing arc
+      { type: 'line', x1: 200, y1: 100, x2: 280, y2: 100, stroke: 'white', strokeWidth: 4 }, // gap in wall
+      { type: 'line', x1: 200, y1: 100, x2: 200, y2: 180, stroke: '#1a1a2e', strokeWidth: 1 }, // door leaf
+      { type: 'arc', cx: 200, cy: 100, r: 80, startAngle: 270, endAngle: 360, stroke: '#1a1a2e', strokeWidth: 0.5 }, // swing arc
+      // Internal door — reception to office
+      { type: 'line', x1: 350, y1: 200, x2: 350, y2: 250, stroke: 'white', strokeWidth: 4 },
+      { type: 'line', x1: 350, y1: 200, x2: 400, y2: 200, stroke: '#1a1a2e', strokeWidth: 1 },
+      { type: 'arc', cx: 350, cy: 200, r: 50, startAngle: 0, endAngle: 90, stroke: '#1a1a2e', strokeWidth: 0.5 },
+      // Meeting room door
+      { type: 'line', x1: 500, y1: 350, x2: 560, y2: 350, stroke: 'white', strokeWidth: 4 },
+      { type: 'line', x1: 500, y1: 350, x2: 500, y2: 400, stroke: '#1a1a2e', strokeWidth: 1 },
+      { type: 'arc', cx: 500, cy: 350, r: 50, startAngle: 270, endAngle: 360, stroke: '#1a1a2e', strokeWidth: 0.5 },
+      // WC door
+      { type: 'line', x1: 150, y1: 350, x2: 190, y2: 350, stroke: 'white', strokeWidth: 4 },
+      { type: 'line', x1: 190, y1: 350, x2: 190, y2: 390, stroke: '#1a1a2e', strokeWidth: 1 },
+      { type: 'arc', cx: 190, cy: 350, r: 40, startAngle: 270, endAngle: 360, stroke: '#1a1a2e', strokeWidth: 0.5 },
       // Windows
       { type: 'line', x1: 100, y1: 180, x2: 100, y2: 280, stroke: '#3b82f6', strokeWidth: 4 },
       { type: 'line', x1: 450, y1: 100, x2: 600, y2: 100, stroke: '#3b82f6', strokeWidth: 4 },
@@ -470,15 +491,15 @@ const steelConnectionSpec: DrawingSpec = {
     id: 'elevation', type: 'section', label: 'END PLATE CONNECTION', x: 100, y: 60, scale: 0.5,
     shapes: [
       // Column (UB section, simplified)
-      { type: 'rect', x: 250, y: 80, w: 20, h: 440, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
-      { type: 'rect', x: 230, y: 80, w: 60, h: 12, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
-      { type: 'rect', x: 230, y: 508, w: 60, h: 12, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
+      { type: 'rect', x: 250, y: 80, w: 20, h: 440, fill: 'url(#hatch-steel)', stroke: '#1a1a2e', strokeWidth: 2 },
+      { type: 'rect', x: 230, y: 80, w: 60, h: 12, fill: 'url(#hatch-steel)', stroke: '#1a1a2e', strokeWidth: 2 },
+      { type: 'rect', x: 230, y: 508, w: 60, h: 12, fill: 'url(#hatch-steel)', stroke: '#1a1a2e', strokeWidth: 2 },
       // End plate
       { type: 'rect', x: 270, y: 200, w: 12, h: 200, fill: '#94a3b8', stroke: '#1a1a2e', strokeWidth: 2 },
       // Beam (I-section)
-      { type: 'rect', x: 282, y: 210, w: 300, h: 12, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
-      { type: 'rect', x: 282, y: 378, w: 300, h: 12, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 2 },
-      { type: 'rect', x: 282, y: 222, w: 10, h: 156, fill: '#d1d5db', stroke: '#1a1a2e', strokeWidth: 1.5 },
+      { type: 'rect', x: 282, y: 210, w: 300, h: 12, fill: 'url(#hatch-steel)', stroke: '#1a1a2e', strokeWidth: 2 },
+      { type: 'rect', x: 282, y: 378, w: 300, h: 12, fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2 },
+      { type: 'rect', x: 282, y: 222, w: 10, h: 156, fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 1.5 },
       // Bolts (6 total, 3 rows x 2)
       { type: 'circle', cx: 276, cy: 230, r: 5, fill: '#1a1a2e', stroke: '#1a1a2e', strokeWidth: 1 },
       { type: 'circle', cx: 276, cy: 270, r: 5, fill: '#1a1a2e', stroke: '#1a1a2e', strokeWidth: 1 },

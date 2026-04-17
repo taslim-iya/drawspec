@@ -127,20 +127,33 @@ export default function DrawingCanvas({ spec, width = 1200, height = 1600 }: Pro
           <marker id="sectionDot" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="10" markerHeight="10">
             <circle cx="5" cy="5" r="4.5" fill="white" stroke={CLR.INK} strokeWidth="1" />
           </marker>
-          {/* Hatching pattern (45° lines for general material - BS 8888) */}
+          {/* Hatching pattern: 45° lines for general material (BS 8888) */}
           <pattern id="hatch-general" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
             <line x1="0" y1="0" x2="0" y2="6" stroke={CLR.HATCH} strokeWidth="0.4" />
           </pattern>
-          <pattern id="hatch-concrete" patternUnits="userSpaceOnUse" width="8" height="8">
-            <circle cx="2" cy="2" r="0.8" fill={CLR.HATCH} />
-            <circle cx="6" cy="6" r="0.5" fill={CLR.HATCH} />
-            <line x1="0" y1="4" x2="8" y2="4" stroke={CLR.HATCH} strokeWidth="0.3" />
+          {/* Hatching pattern: concrete (dots + irregular lines) */}
+          <pattern id="hatch-concrete" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="10" stroke={CLR.HATCH} strokeWidth="0.4" />
+            <circle cx="5" cy="3" r="0.6" fill={CLR.HATCH} />
+            <circle cx="3" cy="8" r="0.4" fill={CLR.HATCH} />
           </pattern>
-          {/* Chain line pattern for centerlines (long-short-long) */}
-          <pattern id="chainLine" patternUnits="userSpaceOnUse" width="20" height="1">
-            <line x1="0" y1="0.5" x2="12" y2="0.5" stroke={CLR.CENTERLINE} strokeWidth="0.4" />
-            <line x1="14" y1="0.5" x2="18" y2="0.5" stroke={CLR.CENTERLINE} strokeWidth="0.4" />
+          {/* Hatching pattern: earth (diagonal + dots) */}
+          <pattern id="hatch-earth" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(-45)">
+            <line x1="0" y1="0" x2="0" y2="8" stroke={CLR.HATCH} strokeWidth="0.3" />
+            <circle cx="4" cy="4" r="0.5" fill={CLR.HATCH} />
           </pattern>
+          {/* Hatching pattern: steel (dense 45° lines) */}
+          <pattern id="hatch-steel" patternUnits="userSpaceOnUse" width="3" height="3" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="3" stroke={CLR.HATCH} strokeWidth="0.5" />
+          </pattern>
+          {/* Hatching pattern: water (wavy horizontal lines) */}
+          <pattern id="hatch-water" patternUnits="userSpaceOnUse" width="20" height="6">
+            <path d="M0 3 Q5 1, 10 3 T20 3" fill="none" stroke={CLR.WATER} strokeWidth="0.4" />
+          </pattern>
+          {/* Section cut arrow marker (large filled, 30° included angle per BS 8888) */}
+          <marker id="sectionArrow" viewBox="0 0 16 10" refX="16" refY="5" markerWidth="12" markerHeight="8" orient="auto">
+            <path d="M 0 0 L 16 5 L 0 10 z" fill={CLR.INK} />
+          </marker>
         </defs>
         <rect width={width} height={height} fill="url(#grid)" />
 
