@@ -189,6 +189,8 @@ const steelBeamSpec: DrawingSpec = {
       { id: 'ibl3', x: 460, y: 300, text: 'WEB', fontSize: 8 },
       { id: 'ibl4', x: 400, y: 108, text: 'TOP FLANGE', fontSize: 8 },
       { id: 'ibl5', x: 400, y: 498, text: 'BTM FLANGE', fontSize: 8 },
+      { id: 'ibl6', x: 260, y: 165, text: 'S355', fontSize: 7 },
+      { id: 'ibl7', x: 530, y: 300, text: 'GRADE S355 JR', fontSize: 7 },
     ],
   }],
   titleBlock: {
@@ -507,9 +509,17 @@ const steelConnectionSpec: DrawingSpec = {
       { type: 'circle', cx: 276, cy: 330, r: 5, fill: '#1a1a2e', stroke: '#1a1a2e', strokeWidth: 1 },
       { type: 'circle', cx: 276, cy: 360, r: 5, fill: '#1a1a2e', stroke: '#1a1a2e', strokeWidth: 1 },
       { type: 'circle', cx: 276, cy: 380, r: 5, fill: '#1a1a2e', stroke: '#1a1a2e', strokeWidth: 1 },
-      // Welds (simplified as triangles)
-      { type: 'line', x1: 282, y1: 222, x2: 288, y2: 222, stroke: '#dc2626', strokeWidth: 2 },
-      { type: 'line', x1: 282, y1: 378, x2: 288, y2: 378, stroke: '#dc2626', strokeWidth: 2 },
+      // Fillet weld symbols (BS 8888: right triangle, perpendicular leg on left)
+      // Top flange weld — reference line + arrow + fillet triangle
+      { type: 'line', x1: 288, y1: 218, x2: 340, y2: 218, stroke: '#1a1a2e', strokeWidth: 0.7 }, // reference line
+      { type: 'line', x1: 288, y1: 218, x2: 285, y2: 222, stroke: '#1a1a2e', strokeWidth: 0.7 }, // arrow
+      { type: 'polyline', points: [[300, 218], [300, 210], [310, 218]], fill: 'none', stroke: '#1a1a2e', strokeWidth: 0.8, closed: true }, // fillet triangle
+      { type: 'text', x: 296, y: 208, text: '8', fontSize: 6, fill: '#1a1a2e' }, // weld size
+      // Bottom flange weld
+      { type: 'line', x1: 288, y1: 382, x2: 340, y2: 382, stroke: '#1a1a2e', strokeWidth: 0.7 },
+      { type: 'line', x1: 288, y1: 382, x2: 285, y2: 378, stroke: '#1a1a2e', strokeWidth: 0.7 },
+      { type: 'polyline', points: [[300, 382], [300, 374], [310, 382]], fill: 'none', stroke: '#1a1a2e', strokeWidth: 0.8, closed: true },
+      { type: 'text', x: 296, y: 372, text: '8', fontSize: 6, fill: '#1a1a2e' },
     ],
     dimensions: [
       { id: 'sc1', type: 'linear', x1: 270, y1: 200, x2: 282, y2: 200, offset: -40, text: '12 E/P' },
@@ -522,7 +532,7 @@ const steelConnectionSpec: DrawingSpec = {
       { id: 'scl2', x: 260, y: 300, text: 'COLUMN\nUC 203x203', fontSize: 7 },
       { id: 'scl3', x: 440, y: 300, text: 'BEAM', fontSize: 9 },
       { id: 'scl4', x: 276, y: 246, text: '6No. M20\n8.8 BOLTS', fontSize: 7 },
-      { id: 'scl5', x: 290, y: 216, text: '8mm FW', fontSize: 6 },
+      { id: 'scl5', x: 330, y: 208, text: '8mm FILLET WELD\n(BOTH FLANGES)', fontSize: 6 },
     ],
   }],
   titleBlock: {

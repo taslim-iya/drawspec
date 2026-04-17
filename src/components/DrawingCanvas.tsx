@@ -181,12 +181,21 @@ export default function DrawingCanvas({ spec, width = 1200, height = 1600 }: Pro
         {/* Title Block */}
         <TitleBlockSVG block={spec.titleBlock} canvasWidth={width} canvasHeight={height} />
 
-        {/* Scale bar */}
-        {spec.titleBlock.scale && spec.titleBlock.scale !== 'NTS' && (
-          <g transform={`translate(50, ${height - 50})`}>
-            <text x="0" y="-4" fontSize="7" fill={CLR.LABEL} style={{ fontFamily: 'monospace' }}>ALL DIMENSIONS IN MILLIMETRES</text>
-          </g>
-        )}
+        {/* General Notes (bottom-left) */}
+        <g transform={`translate(40, ${height - 180})`}>
+          <text x="0" y="0" fontSize="9" fill={CLR.INK} style={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.1em' }}>GENERAL NOTES</text>
+          <line x1="0" y1="4" x2="120" y2="4" stroke={CLR.INK} strokeWidth={LINE.THIN} />
+          {[
+            '1. ALL DIMENSIONS IN MILLIMETRES UNLESS NOTED',
+            '2. DO NOT SCALE THIS DRAWING',
+            `3. DRAWING SCALE: ${spec.titleBlock.scale}`,
+            `4. ALL LEVELS IN METRES ${spec.type === 'tank' || spec.type === 'basin' ? 'AOD' : 'ABOVE FFL'}`,
+            spec.type === 'tank' || spec.type === 'basin' ? '5. ALL CONCRETE TO BE C35/45 MIN' : spec.type === 'beam' ? '5. STEEL GRADE S355 JR MIN' : '5. REFER TO SPEC FOR MATERIALS',
+            '6. THIS DRAWING TO BE READ WITH THE SPECIFICATION',
+          ].map((note, i) => (
+            <text key={i} x="0" y={18 + i * 14} fontSize="7" fill={CLR.LABEL} style={{ fontFamily: 'monospace' }}>{note}</text>
+          ))}
+        </g>
       </svg>
     </div>
   );
@@ -356,9 +365,28 @@ function TitleBlockSVG({ block, canvasWidth, canvasHeight }: { block: TitleBlock
       <text x={bx + 218} y={by + 92} fontSize={7} fill={CLR.CONSTRUCTION} style={{ fontFamily: 'monospace' }}>DATE</text>
       <text x={bx + 218} y={by + 106} fontSize={9} fill={CLR.INK} style={{ fontFamily: 'monospace' }}>{block.date}</text>
 
-      {/* "ALL DIMS IN MM" note */}
-      <text x={bx + bw / 2} y={by - 6} fontSize={7} textAnchor="middle" fill={CLR.CONSTRUCTION}
+      {/* Notes block above title block */}
+      <text x={bx + bw / 2} y={by - 24} fontSize={7} textAnchor="middle" fill={CLR.CONSTRUCTION}
         style={{ fontFamily: 'monospace', letterSpacing: '0.15em' }}>ALL DIMENSIONS IN MILLIMETRES UNLESS NOTED</text>
+      <text x={bx + bw / 2} y={by - 12} fontSize={7} textAnchor="middle" fill={CLR.CONSTRUCTION}
+        style={{ fontFamily: 'monospace', letterSpacing: '0.1em' }}>DO NOT SCALE — IF IN DOUBT, ASK</text>
+
+      {/* Revision table (single row for current rev) */}
+      <g transform={`translate(${bx}, ${by - 60})`}>
+        <rect x={0} y={0} width={bw} height={24} fill="none" stroke={CLR.INK} strokeWidth={LINE.THIN} />
+        <line x1={30} y1={0} x2={30} y2={24} stroke={CLR.INK} strokeWidth={LINE.THIN} />
+        <line x1={180} y1={0} x2={180} y2={24} stroke={CLR.INK} strokeWidth={LINE.THIN} />
+        <line x1={240} y1={0} x2={240} y2={24} stroke={CLR.INK} strokeWidth={LINE.THIN} />
+        <text x={15} y={15} fontSize={8} textAnchor="middle" fill={CLR.INK} style={{ fontFamily: 'monospace', fontWeight: 700 }}>{block.revision}</text>
+        <text x={105} y={15} fontSize={7} textAnchor="middle" fill={CLR.INK} style={{ fontFamily: 'monospace' }}>PRELIMINARY ISSUE</text>
+        <text x={210} y={15} fontSize={7} textAnchor="middle" fill={CLR.INK} style={{ fontFamily: 'monospace' }}>{block.drawnBy}</text>
+        <text x={265} y={15} fontSize={7} textAnchor="middle" fill={CLR.INK} style={{ fontFamily: 'monospace' }}>{block.date}</text>
+        {/* Header labels */}
+        <text x={15} y={-3} fontSize={6} textAnchor="middle" fill={CLR.CONSTRUCTION} style={{ fontFamily: 'monospace' }}>REV</text>
+        <text x={105} y={-3} fontSize={6} textAnchor="middle" fill={CLR.CONSTRUCTION} style={{ fontFamily: 'monospace' }}>DESCRIPTION</text>
+        <text x={210} y={-3} fontSize={6} textAnchor="middle" fill={CLR.CONSTRUCTION} style={{ fontFamily: 'monospace' }}>BY</text>
+        <text x={265} y={-3} fontSize={6} textAnchor="middle" fill={CLR.CONSTRUCTION} style={{ fontFamily: 'monospace' }}>DATE</text>
+      </g>
     </g>
   );
 }
