@@ -271,7 +271,7 @@ function buildSpecFromAI(parsed: any, description: string): DrawingSpec {
   const dimensions: any[] = [];
   const labels: any[] = [];
 
-  if (type === 'tank' && diameterMm > 0) {
+  if ((type === 'tank' || type === 'pipe' || diameterMm > 0) && diameterMm > 0 && !lengthMm) {
     // Circular tank
     const r = 220; // SVG radius
     const innerR = r - Math.max(8, (wallMm / diameterMm) * r * 2);
@@ -343,7 +343,7 @@ function buildSpecFromAI(parsed: any, description: string): DrawingSpec {
     }],
     titleBlock: {
       title,
-      drawingNo: `${type === 'tank' ? 'TNK' : type === 'basin' ? 'BSN' : 'DRW'}-001-GA`,
+      drawingNo: `${type === 'tank' ? 'TNK' : type === 'basin' ? 'BSN' : type === 'pipe' ? 'PIP' : type === 'beam' ? 'STL' : type === 'foundation' ? 'FND' : 'DRW'}-001-GA`,
       revision: 'P01',
       date: new Date().toISOString().split('T')[0],
       drawnBy: 'AI Generated',
