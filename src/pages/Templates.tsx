@@ -5,8 +5,13 @@ import { useDrawingStore } from '@/stores/drawingStore';
 import type { Drawing } from '@/lib/types';
 
 const CATEGORY_META: Record<string, { icon: string; desc: string }> = {
-  'Water Treatment': { icon: '💧', desc: 'Settlement tanks, basins, treatment works' },
+  'Water Treatment': { icon: '💧', desc: 'Settlement tanks, basins, pump stations, treatment works' },
   'Pipework': { icon: '🔧', desc: 'Pipe sections, fittings, connections' },
+  'Structural Steel': { icon: '🔩', desc: 'Beams, columns, connections, end plates' },
+  'Civil/Structural': { icon: '🧱', desc: 'Retaining walls, foundations, earthworks' },
+  'Drainage': { icon: '🕳️', desc: 'Manholes, inspection chambers, drainage runs' },
+  'Architecture': { icon: '🏢', desc: 'Floor plans, elevations, sections' },
+  'Civil': { icon: '🗺️', desc: 'Site layouts, road alignments, landscaping' },
 };
 
 export default function Templates() {

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
 @import "tailwindcss";
 
 /* DrawSpec Premium Design System */
@@ -152,4 +154,3 @@ html { font-family: var(--font-body); color: var(--text); background: var(--bg);
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 .animate-pulse { animation: pulse 2s ease-in-out infinite; }
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
