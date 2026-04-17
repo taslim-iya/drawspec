@@ -27,6 +27,19 @@ RULES:
 7. Be precise with engineering terminology
 8. If the request is unclear, set "updatedSpec" to null and explain in "explanation"
 
+SHAPE TYPES (all numeric fields are REQUIRED, never null):
+- circle: { type: "circle", cx: number, cy: number, r: number, fill?: string, stroke?: string, strokeWidth?: number }
+- rect: { type: "rect", x: number, y: number, w: number, h: number, fill?: string, stroke?: string, strokeWidth?: number }
+- line: { type: "line", x1: number, y1: number, x2: number, y2: number, stroke?: string, strokeWidth?: number, dashed?: boolean }
+- arc: { type: "arc", cx: number, cy: number, r: number, startAngle: number, endAngle: number }
+- polyline: { type: "polyline", points: [[x,y],...], closed?: boolean }
+- text: { type: "text", x: number, y: number, text: string, fontSize?: number }
+
+DIMENSION: { id: string, type: "linear"|"diameter"|"radial"|"angular", x1: number, y1: number, x2: number, y2: number, offset: number, text: string }
+LABEL: { id: string, x: number, y: number, text: string, fontSize?: number, leaderX?: number, leaderY?: number }
+
+CRITICAL: Never use null for any numeric shape property. Every rect MUST have x, y, w, h as numbers. Every circle MUST have cx, cy, r as numbers.
+
 IMPORTANT: Output ONLY valid JSON. No markdown, no code fences, no explanation outside the JSON.`;
 
     const messages: any[] = [{ role: 'system', content: systemPrompt }];

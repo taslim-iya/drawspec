@@ -260,10 +260,10 @@ function buildSpecFromAI(parsed: any, description: string): DrawingSpec {
 
   // Try to extract key dimensions
   const diameterMm = parseFloat(dims.diameter || dims.outer_diameter || '0');
-  const heightMm = parseFloat(dims.height || dims.wall_height || dims.sidewall_height || '0');
+  const heightMm = parseFloat(dims.height || dims.wall_height || dims.sidewall_height || dims.depth || dims.hopper_depth || '0');
   const widthMm = parseFloat(dims.width || '0');
   const lengthMm = parseFloat(dims.length || '0');
-  const wallMm = parseFloat(dims.wall_thickness || '250');
+  const wallMm = parseFloat(dims.wall_thickness || dims.thickness || '250');
 
   // Canvas coordinates (we scale real mm to SVG coords)
   const cx = 400, cy = 300;
@@ -274,24 +274,44 @@ function buildSpecFromAI(parsed: any, description: string): DrawingSpec {
   if (type === 'tank' && diameterMm > 0) {
     // Circular tank
     const r = 220; // SVG radius
-    const innerR = r - (wallMm / diameterMm) * r * 2;
+    const innerR = r - Math.max(8, (wallMm / diameterMm) * r * 2);
+    // Outer wall (concrete hatching between outer and inner circles not possible with SVG fill, use thick stroke)
     shapes.push({ type: 'circle', cx, cy, r, fill: 'none', stroke: '#1a1a2e', strokeWidth: 2.5 });
     shapes.push({ type: 'circle', cx, cy, r: innerR, fill: 'none', stroke: '#1a1a2e', strokeWidth: 1.5 });
     shapes.push({ type: 'circle', cx, cy, r: 15, fill: '#e2e8f0', stroke: '#1a1a2e', strokeWidth: 2 }); // central column
-    shapes.push({ type: 'line', x1: cx - r - 20, y1: cy, x2: cx + r + 20, y2: cy, stroke: '#1a1a2e', strokeWidth: 0.3, dashed: true }); // center line H
-    shapes.push({ type: 'line', x1: cx, y1: cy - r - 20, x2: cx, y2: cy + r + 20, stroke: '#1a1a2e', strokeWidth: 0.3, dashed: true }); // center line V
-    dimensions.push({ id: 'dim-dia', type: 'linear', x1: cx - r, y1: cy + r + 30, x2: cx + r, y2: cy + r + 30, offset: 20, text: `Ø${diameterMm}mm` });
-    if (wallMm) dimensions.push({ id: 'dim-wall', type: 'linear', x1: cx + innerR, y1: cy - r - 10, x2: cx + r, y2: cy - r - 10, offset: -20, text: `${wallMm}mm` });
+    // Center lines (chain dash-dot, BS 8888)
+    shapes.push({ type: 'line', x1: cx - r - 20, y1: cy, x2: cx + r + 20, y2: cy, stroke: '#dc2626', strokeWidth: 0.4, dashed: true });
+    shapes.push({ type: 'line', x1: cx, y1: cy - r - 20, x2: cx, y2: cy + r + 20, stroke: '#dc2626', strokeWidth: 0.4, dashed: true });
+    // Dimensions
+    dimensions.push({ id: 'dim-dia', type: 'diameter', x1: cx - r, y1: cy + r + 30, x2: cx + r, y2: cy + r + 30, offset: 25, text: `Ø${diameterMm}` });
+    if (wallMm) dimensions.push({ id: 'dim-wall', type: 'linear', x1: cx + innerR, y1: cy - r - 10, x2: cx + r, y2: cy - r - 10, offset: -20, text: `${wallMm}` });
     labels.push({ id: 'lbl-title', x: cx, y: 30, text: title, fontSize: 14 });
+    if (heightMm > 0) labels.push({ id: 'lbl-depth', x: cx, y: cy + 30, text: `SWD: ${heightMm}mm`, fontSize: 9 });
   } else if ((type === 'basin' || widthMm > 0) && (widthMm > 0 || lengthMm > 0)) {
     // Rectangular structure
-    const w = 500, h = 300;
-    const wallPx = 12;
-    shapes.push({ type: 'rect', x: cx - w/2, y: cy - h/2, w, h, fill: 'none', stroke: '#1a1a2e', strokeWidth: 2.5 });
-    shapes.push({ type: 'rect', x: cx - w/2 + wallPx, y: cy - h/2 + wallPx, w: w - wallPx*2, h: h - wallPx*2, fill: 'none', stroke: '#1a1a2e', strokeWidth: 1.5 });
-    dimensions.push({ id: 'dim-w', type: 'linear', x1: cx - w/2, y1: cy + h/2 + 10, x2: cx + w/2, y2: cy + h/2 + 10, offset: 20, text: `${widthMm || lengthMm}mm` });
-    if (heightMm) dimensions.push({ id: 'dim-h', type: 'linear', x1: cx + w/2 + 10, y1: cy - h/2, x2: cx + w/2 + 10, y2: cy + h/2, offset: 20, text: `${heightMm}mm` });
+    const aspectRatio = lengthMm > 0 && widthMm > 0 ? lengthMm / widthMm : 1.67;
+    const maxW = 520;
+    const w = maxW;
+    const h = Math.min(400, Math.round(w / aspectRatio));
+    const wallPx = Math.max(8, Math.round(wallMm / ((lengthMm || widthMm || 10000) / w)));
+    // Outer wall (hatched for concrete)
+    shapes.push({ type: 'rect', x: cx - w/2, y: cy - h/2, w, h, fill: 'url(#hatch-concrete)', stroke: '#1a1a2e', strokeWidth: 2.5 });
+    // Inner void
+    shapes.push({ type: 'rect', x: cx - w/2 + wallPx, y: cy - h/2 + wallPx, w: w - wallPx*2, h: h - wallPx*2, fill: 'white', stroke: '#1a1a2e', strokeWidth: 1.5 });
+    // Center lines
+    shapes.push({ type: 'line', x1: cx, y1: cy - h/2 - 15, x2: cx, y2: cy + h/2 + 15, stroke: '#dc2626', strokeWidth: 0.3, dashed: true });
+    shapes.push({ type: 'line', x1: cx - w/2 - 15, y1: cy, x2: cx + w/2 + 15, y2: cy, stroke: '#dc2626', strokeWidth: 0.3, dashed: true });
+    // Length dimension (horizontal)
+    dimensions.push({ id: 'dim-l', type: 'linear', x1: cx - w/2, y1: cy + h/2 + 10, x2: cx + w/2, y2: cy + h/2 + 10, offset: 25, text: `${lengthMm || widthMm}` });
+    // Width dimension (vertical)
+    if (widthMm > 0 && lengthMm > 0) {
+      dimensions.push({ id: 'dim-w', type: 'linear', x1: cx + w/2 + 10, y1: cy - h/2, x2: cx + w/2 + 10, y2: cy + h/2, offset: 25, text: `${widthMm}` });
+    }
+    // Wall thickness dimension
+    dimensions.push({ id: 'dim-wall', type: 'linear', x1: cx - w/2, y1: cy - h/2 - 10, x2: cx - w/2 + wallPx, y2: cy - h/2 - 10, offset: -20, text: `${wallMm}` });
     labels.push({ id: 'lbl-title', x: cx, y: 30, text: title, fontSize: 14 });
+    // Depth note if available
+    if (heightMm > 0) labels.push({ id: 'lbl-depth', x: cx, y: cy, text: `DEPTH: ${heightMm}mm`, fontSize: 9 });
   } else {
     // Generic — show parsed info as text
     shapes.push({ type: 'rect', x: 100, y: 100, w: 600, h: 400, fill: 'none', stroke: '#1a1a2e', strokeWidth: 2 });
