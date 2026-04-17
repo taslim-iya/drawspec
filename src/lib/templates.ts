@@ -176,6 +176,18 @@ const steelBeamSpec: DrawingSpec = {
       // Center lines
       { type: 'line', x1: 400, y1: 100, x2: 400, y2: 500, stroke: '#dc2626', strokeWidth: 0.3, dashed: true },
       { type: 'line', x1: 270, y1: 300, x2: 530, y2: 300, stroke: '#dc2626', strokeWidth: 0.3, dashed: true },
+      // Feature Control Frame (GD&T) — flatness of top flange
+      // Box: | ⏥ | 0.5 |
+      { type: 'rect', x: 510, y: 105, w: 60, h: 14, fill: 'white', stroke: '#1a1a2e', strokeWidth: 0.7 },
+      { type: 'line', x1: 530, y1: 105, x2: 530, y2: 119, stroke: '#1a1a2e', strokeWidth: 0.5 },
+      { type: 'text', x: 520, y: 115, text: '⏥', fontSize: 8, fill: '#1a1a2e' },
+      { type: 'text', x: 548, y: 115, text: '0.5', fontSize: 7, fill: '#1a1a2e' },
+      // Leader from FCF to top flange
+      { type: 'line', x1: 510, y1: 112, x2: 500, y2: 120, stroke: '#1a1a2e', strokeWidth: 0.5 },
+      // Surface finish checkmark symbol
+      { type: 'polyline', points: [[512, 136], [516, 142], [520, 130]], fill: 'none', stroke: '#1a1a2e', strokeWidth: 0.7, closed: false },
+      { type: 'line', x1: 520, y1: 130, x2: 535, y2: 130, stroke: '#1a1a2e', strokeWidth: 0.5 },
+      { type: 'text', x: 540, y: 135, text: 'Ra 12.5', fontSize: 6, anchor: 'start', fill: '#1a1a2e' },
     ],
     dimensions: [
       { id: 'ib1', type: 'linear', x1: 300, y1: 120, x2: 500, y2: 120, offset: -30, text: '200' },
@@ -191,6 +203,7 @@ const steelBeamSpec: DrawingSpec = {
       { id: 'ibl5', x: 400, y: 498, text: 'BTM FLANGE', fontSize: 8 },
       { id: 'ibl6', x: 260, y: 165, text: 'S355', fontSize: 7 },
       { id: 'ibl7', x: 530, y: 300, text: 'GRADE S355 JR', fontSize: 7 },
+
     ],
   }],
   titleBlock: {
