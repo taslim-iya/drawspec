@@ -41,6 +41,7 @@ export default function ChatPanel({ spec, onSpecUpdate, drawingName }: Props) {
     setLoading(true);
 
     try {
+      const localKey = localStorage.getItem('drawspec-openai-key') || '';
       const res = await fetch('/api/chat-edit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -48,6 +49,7 @@ export default function ChatPanel({ spec, onSpecUpdate, drawingName }: Props) {
           message: userMsg.content,
           currentSpec: spec,
           history: messages.filter((m) => m.role !== 'system').slice(-6),
+          apiKey: localKey,
         }),
       });
       const data = await res.json();

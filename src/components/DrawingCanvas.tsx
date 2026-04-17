@@ -136,6 +136,16 @@ function RenderShape({ shape }: { shape: Shape }) {
         ? <polygon points={pts} fill={shape.fill || 'none'} stroke={shape.stroke || '#1a1a2e'} strokeWidth={shape.strokeWidth || 1} />
         : <polyline points={pts} fill={shape.fill || 'none'} stroke={shape.stroke || '#1a1a2e'} strokeWidth={shape.strokeWidth || 1} />;
     }
+    case 'arc': {
+      const startRad = (shape.startAngle * Math.PI) / 180;
+      const endRad = (shape.endAngle * Math.PI) / 180;
+      const x1 = shape.cx + shape.r * Math.cos(startRad);
+      const y1 = shape.cy - shape.r * Math.sin(startRad);
+      const x2 = shape.cx + shape.r * Math.cos(endRad);
+      const y2 = shape.cy - shape.r * Math.sin(endRad);
+      const sweep = ((shape.endAngle - shape.startAngle + 360) % 360) > 180 ? 1 : 0;
+      return <path d={`M ${x1} ${y1} A ${shape.r} ${shape.r} 0 ${sweep} 0 ${x2} ${y2}`} fill="none" stroke={shape.stroke || '#1a1a2e'} strokeWidth={shape.strokeWidth || 1} />;
+    }
     case 'text':
       return <text x={shape.x} y={shape.y} fontSize={shape.fontSize || 12} textAnchor={shape.anchor || 'middle'} fill={shape.fill || '#1a1a2e'} transform={shape.rotate ? `rotate(${shape.rotate}, ${shape.x}, ${shape.y})` : undefined} style={{ fontFamily: 'monospace' }}>{shape.text}</text>;
     default:

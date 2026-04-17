@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Ruler, Tag, Layers, MessageSquare, ChevronRight, Upload } from 'lucide-react';
+import { Eye, EyeOff, Ruler, Tag, Layers, MessageSquare, ChevronRight, Upload, Undo2, Trash2 } from 'lucide-react';
 import { useDrawingStore } from '@/stores/drawingStore';
 import { templates } from '@/lib/templates';
 import DrawingCanvas from '@/components/DrawingCanvas';
@@ -14,7 +14,7 @@ type RightPanel = 'chat' | 'dimensions' | null;
 export default function Editor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { drawings, addDrawing, updateDrawing, setActiveDrawing, activeLayers, toggleLayer } = useDrawingStore();
+  const { drawings, addDrawing, updateDrawing, removeDrawing, undoDrawing, setActiveDrawing, activeLayers, toggleLayer, history } = useDrawingStore();
   const [textInput, setTextInput] = useState('');
   const [parsing, setParsing] = useState(false);
   const [showLeft, setShowLeft] = useState(true);
@@ -44,10 +44,11 @@ export default function Editor() {
     if (!textInput.trim()) return;
     setParsing(true);
     try {
+      const localKey = localStorage.getItem('drawspec-openai-key') || '';
       const res = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: textInput }),
+        body: JSON.stringify({ prompt: textInput, apiKey: localKey }),
       });
       const data = await res.json();
       if (data.content) {
@@ -203,6 +204,18 @@ export default function Editor() {
             style={{ padding: 8 }}>
             <Ruler size={15} />
           </button>
+          {drawing && (history[drawing.id]?.length || 0) > 0 && (
+            <button onClick={() => undoDrawing(drawing.id)}
+              className="btn-secondary" style={{ padding: 8 }} title="Undo last change">
+              <Undo2 size={15} />
+            </button>
+          )}
+          {drawing && drawing.id !== 'demo-fst' && (
+            <button onClick={() => { if (confirm(`Delete "${drawing.name}"?`)) { removeDrawing(drawing.id); navigate('/'); } }}
+              className="btn-secondary" style={{ padding: 8, color: 'var(--danger)' }} title="Delete drawing">
+              <Trash2 size={15} />
+            </button>
+          )}
         </div>
         <DrawingCanvas spec={drawing.spec} />
       </div>
@@ -225,5 +238,82 @@ export default function Editor() {
 }
 
 function buildSpecFromAI(parsed: any, description: string): DrawingSpec {
-  return templates[0].spec;
+  const dims = parsed.dimensions || {};
+  const features = parsed.features || [];
+  const type = (parsed.type || 'custom') as DrawingSpec['type'];
+  const title = (parsed.title || description.slice(0, 40)).toUpperCase();
+
+  // Try to extract key dimensions
+  const diameterMm = parseFloat(dims.diameter || dims.outer_diameter || '0');
+  const heightMm = parseFloat(dims.height || dims.wall_height || dims.sidewall_height || '0');
+  const widthMm = parseFloat(dims.width || '0');
+  const lengthMm = parseFloat(dims.length || '0');
+  const wallMm = parseFloat(dims.wall_thickness || '250');
+
+  // Canvas coordinates (we scale real mm to SVG coords)
+  const cx = 400, cy = 300;
+  const shapes: any[] = [];
+  const dimensions: any[] = [];
+  const labels: any[] = [];
+
+  if (type === 'tank' && diameterMm > 0) {
+    // Circular tank
+    const r = 220; // SVG radius
+    const innerR = r - (wallMm / diameterMm) * r * 2;
+    shapes.push({ type: 'circle', cx, cy, r, fill: 'none', stroke: '#1a1a2e', strokeWidth: 2.5 });
+    shapes.push({ type: 'circle', cx, cy, r: innerR, fill: 'none', stroke: '#1a1a2e', strokeWidth: 1.5 });
+    shapes.push({ type: 'circle', cx, cy, r: 15, fill: '#e2e8f0', stroke: '#1a1a2e', strokeWidth: 2 }); // central column
+    shapes.push({ type: 'line', x1: cx - r - 20, y1: cy, x2: cx + r + 20, y2: cy, stroke: '#1a1a2e', strokeWidth: 0.3, dashed: true }); // center line H
+    shapes.push({ type: 'line', x1: cx, y1: cy - r - 20, x2: cx, y2: cy + r + 20, stroke: '#1a1a2e', strokeWidth: 0.3, dashed: true }); // center line V
+    dimensions.push({ id: 'dim-dia', type: 'linear', x1: cx - r, y1: cy + r + 30, x2: cx + r, y2: cy + r + 30, offset: 20, text: `Ø${diameterMm}mm` });
+    if (wallMm) dimensions.push({ id: 'dim-wall', type: 'linear', x1: cx + innerR, y1: cy - r - 10, x2: cx + r, y2: cy - r - 10, offset: -20, text: `${wallMm}mm` });
+    labels.push({ id: 'lbl-title', x: cx, y: 30, text: title, fontSize: 14 });
+  } else if ((type === 'basin' || widthMm > 0) && (widthMm > 0 || lengthMm > 0)) {
+    // Rectangular structure
+    const w = 500, h = 300;
+    const wallPx = 12;
+    shapes.push({ type: 'rect', x: cx - w/2, y: cy - h/2, w, h, fill: 'none', stroke: '#1a1a2e', strokeWidth: 2.5 });
+    shapes.push({ type: 'rect', x: cx - w/2 + wallPx, y: cy - h/2 + wallPx, w: w - wallPx*2, h: h - wallPx*2, fill: 'none', stroke: '#1a1a2e', strokeWidth: 1.5 });
+    dimensions.push({ id: 'dim-w', type: 'linear', x1: cx - w/2, y1: cy + h/2 + 10, x2: cx + w/2, y2: cy + h/2 + 10, offset: 20, text: `${widthMm || lengthMm}mm` });
+    if (heightMm) dimensions.push({ id: 'dim-h', type: 'linear', x1: cx + w/2 + 10, y1: cy - h/2, x2: cx + w/2 + 10, y2: cy + h/2, offset: 20, text: `${heightMm}mm` });
+    labels.push({ id: 'lbl-title', x: cx, y: 30, text: title, fontSize: 14 });
+  } else {
+    // Generic — show parsed info as text
+    shapes.push({ type: 'rect', x: 100, y: 100, w: 600, h: 400, fill: 'none', stroke: '#1a1a2e', strokeWidth: 2 });
+    labels.push({ id: 'lbl-title', x: cx, y: 60, text: title, fontSize: 14 });
+    let yPos = 280;
+    for (const [k, v] of Object.entries(dims)) {
+      labels.push({ id: `lbl-${k}`, x: cx, y: yPos, text: `${String(k).replace(/_/g, ' ')}: ${v}`, fontSize: 10 });
+      yPos += 18;
+    }
+  }
+
+  // Add feature annotations
+  features.forEach((f: string, i: number) => {
+    labels.push({ id: `feat-${i}`, x: 100, y: 620 + i * 16, text: `${i + 1}. ${f}`, fontSize: 9 });
+  });
+
+  return {
+    type,
+    unit: 'mm',
+    views: [{
+      id: 'plan',
+      type: 'plan',
+      label: 'PLAN VIEW',
+      x: 80, y: 60,
+      scale: diameterMm > 0 ? Math.min(1, 800 / diameterMm) : 1,
+      shapes,
+      dimensions,
+      labels,
+    }],
+    titleBlock: {
+      title,
+      drawingNo: `${type === 'tank' ? 'TNK' : type === 'basin' ? 'BSN' : 'DRW'}-001-GA`,
+      revision: 'P01',
+      date: new Date().toISOString().split('T')[0],
+      drawnBy: 'AI Generated',
+      scale: diameterMm > 0 ? `1:${Math.round(diameterMm / 10)}` : 'NTS',
+      project: parsed.project || description.slice(0, 30).toUpperCase(),
+    },
+  };
 }

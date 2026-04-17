@@ -185,41 +185,118 @@ export default function FileUpload({ onParsed }: Props) {
   };
 
   const parseImage = async (file: File) => {
-    // Convert image to data URL for AI analysis
-    await parseWithAI(file, file.name.split('.').pop() || 'image');
+    // Convert image to base64 and send to AI for interpretation
+    const base64 = await fileToBase64(file);
+    await parseWithAI(file, file.name.split('.').pop() || 'image', base64);
   };
 
   const parsePDF = async (file: File) => {
-    await parseWithAI(file, 'pdf');
+    const base64 = await fileToBase64(file);
+    await parseWithAI(file, 'pdf', base64);
   };
 
-  const parseWithAI = async (file: File, format: string) => {
-    // For non-DXF files, send to AI for interpretation
-    const spec = {
-      type: 'custom' as const,
-      unit: 'mm' as const,
-      views: [{
-        id: 'ai-parsed',
-        type: 'plan' as const,
-        label: `${format.toUpperCase()}: ${file.name}`,
-        x: 40, y: 40, scale: 1,
-        shapes: [
-          { type: 'text' as const, x: 400, y: 280, text: `Uploaded: ${file.name}`, fontSize: 14, fill: '#1a1a2e' },
-          { type: 'text' as const, x: 400, y: 310, text: `Format: ${format.toUpperCase()} — Use chat to describe the drawing`, fontSize: 10, fill: '#64748b' },
-          { type: 'text' as const, x: 400, y: 340, text: 'The AI will help you recreate or modify it', fontSize: 10, fill: '#64748b' },
-          { type: 'rect' as const, x: 150, y: 150, w: 500, h: 300, fill: 'none', stroke: '#d1d5db', strokeWidth: 1 },
-        ],
-        dimensions: [],
-        labels: [],
-      }],
-      titleBlock: {
-        title: file.name.replace(/\.[^.]+$/, '').toUpperCase(),
-        drawingNo: 'UPL-001', revision: 'P01',
-        date: new Date().toISOString().split('T')[0],
-        drawnBy: 'Upload', scale: 'NTS', project: 'UPLOADED DRAWING',
-      },
-    };
-    onParsed(spec, file.name);
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const parseWithAI = async (file: File, format: string, base64?: string) => {
+    // Send to AI for interpretation
+    const localKey = localStorage.getItem('drawspec-openai-key') || '';
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: `I've uploaded an engineering drawing file (${file.name}, format: ${format}). Describe what the drawing shows and provide structured dimensions. Respond with JSON containing: title, type (tank/basin/pipe/custom), dimensions (with keys like diameter, width, height, wall_thickness in mm), and features (array of strings describing key features). If you can identify specific measurements from the description, include them.`,
+          apiKey: localKey,
+          ...(base64 && ['png','jpg','jpeg'].includes(format) ? { imageBase64: base64 } : {}),
+        }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      // Try to parse AI response
+      const content = data.choices?.[0]?.message?.content || data.content || '';
+      const jsonMatch = content.match(/```json\s*([\s\S]*?)```/) || content.match(/\{[\s\S]*\}/);
+      let parsed: any = {};
+      if (jsonMatch) {
+        try { parsed = JSON.parse(jsonMatch[1] || jsonMatch[0]); } catch {}
+      }
+
+      const title = parsed.title || file.name.replace(/\.[^.]+$/, '').toUpperCase();
+      const dims = parsed.dimensions || {};
+
+      // Build shapes from parsed info
+      const shapes: any[] = [];
+      const labels: any[] = [{ id: 'lbl-title', x: 400, y: 30, text: title, fontSize: 14 }];
+      const dimensions: any[] = [];
+
+      if (parsed.type === 'tank' && dims.diameter) {
+        const r = 200;
+        shapes.push({ type: 'circle', cx: 400, cy: 300, r, fill: 'none', stroke: '#1a1a2e', strokeWidth: 2.5 });
+        dimensions.push({ id: 'dim-dia', type: 'linear', x1: 200, y1: 530, x2: 600, y2: 530, offset: 20, text: `Ø${dims.diameter}mm` });
+      } else if (dims.width || dims.length) {
+        const w = 500, h = 300;
+        shapes.push({ type: 'rect', x: 150, y: 150, w, h, fill: 'none', stroke: '#1a1a2e', strokeWidth: 2.5 });
+        if (dims.width) dimensions.push({ id: 'dim-w', type: 'linear', x1: 150, y1: 470, x2: 650, y2: 470, offset: 20, text: `${dims.width}mm` });
+        if (dims.height) dimensions.push({ id: 'dim-h', type: 'linear', x1: 670, y1: 150, x2: 670, y2: 450, offset: 20, text: `${dims.height}mm` });
+      } else {
+        shapes.push({ type: 'rect', x: 100, y: 100, w: 600, h: 400, fill: 'none', stroke: '#1a1a2e', strokeWidth: 2 });
+        labels.push({ id: 'lbl-desc', x: 400, y: 300, text: `Imported from ${file.name}`, fontSize: 11 });
+      }
+
+      // Add features as labels
+      (parsed.features || []).forEach((f: string, i: number) => {
+        labels.push({ id: `feat-${i}`, x: 100, y: 580 + i * 16, text: `${i + 1}. ${f}`, fontSize: 9 });
+      });
+
+      const spec = {
+        type: (parsed.type || 'custom') as any,
+        unit: 'mm' as const,
+        views: [{
+          id: 'ai-parsed',
+          type: 'plan' as const,
+          label: `${format.toUpperCase()}: ${file.name}`,
+          x: 40, y: 40, scale: 1,
+          shapes, dimensions, labels,
+        }],
+        titleBlock: {
+          title, drawingNo: 'UPL-001', revision: 'P01',
+          date: new Date().toISOString().split('T')[0],
+          drawnBy: 'AI Import', scale: 'NTS', project: 'UPLOADED DRAWING',
+        },
+      };
+      onParsed(spec, file.name);
+    } catch {
+      // Fallback to placeholder if AI fails
+      const spec = {
+        type: 'custom' as const,
+        unit: 'mm' as const,
+        views: [{
+          id: 'ai-parsed', type: 'plan' as const,
+          label: `${format.toUpperCase()}: ${file.name}`,
+          x: 40, y: 40, scale: 1,
+          shapes: [
+            { type: 'text' as const, x: 400, y: 280, text: `Uploaded: ${file.name}`, fontSize: 14, fill: '#1a1a2e' },
+            { type: 'text' as const, x: 400, y: 310, text: 'AI parsing failed — use chat to describe the drawing', fontSize: 10, fill: '#64748b' },
+            { type: 'rect' as const, x: 150, y: 150, w: 500, h: 300, fill: 'none', stroke: '#d1d5db', strokeWidth: 1 },
+          ],
+          dimensions: [], labels: [],
+        }],
+        titleBlock: {
+          title: file.name.replace(/\.[^.]+$/, '').toUpperCase(),
+          drawingNo: 'UPL-001', revision: 'P01',
+          date: new Date().toISOString().split('T')[0],
+          drawnBy: 'Upload', scale: 'NTS', project: 'UPLOADED DRAWING',
+        },
+      };
+      onParsed(spec, file.name);
+    }
   };
 
   const onDrop = (e: React.DragEvent) => {

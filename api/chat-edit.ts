@@ -2,10 +2,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
-  const OPENAI_KEY = process.env.OPENAI_API_KEY || '';
+  const { message, currentSpec, history, apiKey: clientKey } = req.body;
+  const OPENAI_KEY = clientKey || process.env.OPENAI_API_KEY || '';
   if (!OPENAI_KEY) return res.status(200).json({ error: 'No API key configured. Add your OpenAI key in Settings.' });
-
-  const { message, currentSpec, history } = req.body;
   if (!message) return res.status(400).json({ error: 'Message required' });
 
   try {

@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Plus, FileText, Clock, PenTool, ArrowRight, Upload, Sparkles } from 'lucide-react';
+import { Plus, FileText, Clock, PenTool, ArrowRight, Upload, Sparkles, Trash2 } from 'lucide-react';
 import { useDrawingStore } from '@/stores/drawingStore';
 import { templates } from '@/lib/templates';
 
 export default function Dashboard() {
-  const { drawings } = useDrawingStore();
+  const { drawings, removeDrawing } = useDrawingStore();
 
   return (
     <div style={{ maxWidth: 780 }} className="animate-fade-in">
@@ -86,9 +86,19 @@ export default function Dashboard() {
                     </p>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-3)' }}>
-                  <Clock size={11} />
-                  {new Date(d.updatedAt).toLocaleDateString()}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-3)' }}>
+                    <Clock size={11} />
+                    {new Date(d.updatedAt).toLocaleDateString()}
+                  </span>
+                  {d.id !== 'demo-fst' && (
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (confirm(`Delete "${d.name}"?`)) removeDrawing(d.id); }}
+                      style={{ padding: 4, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-3)', borderRadius: 4 }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--danger)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-3)')}>
+                      <Trash2 size={13} />
+                    </button>
+                  )}
                 </div>
               </Link>
             ))}
