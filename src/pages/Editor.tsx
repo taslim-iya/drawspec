@@ -51,14 +51,29 @@ export default function Editor() {
         body: JSON.stringify({ prompt: textInput, apiKey: localKey }),
       });
       const data = await res.json();
-      if (data.content) {
-        const parsed = JSON.parse(data.content);
+      const raw = data.content || '';
+      if (raw) {
+        // Strip markdown code fences if present
+        const jsonStr = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+        const parsed = JSON.parse(jsonStr);
         createFromSpec(buildSpecFromAI(parsed, textInput), parsed.title || 'AI Drawing');
         setParsing(false);
         return;
       }
-    } catch { /* fallback */ }
-    createFromSpec(templates[0].spec, 'Custom Drawing');
+      if (data.error) {
+        console.error('AI error:', data.error);
+      }
+    } catch (err) {
+      console.error('AI parse error:', err);
+    }
+    // Only fall back to template if AI completely fails
+    createFromSpec(buildSpecFromAI({
+      title: textInput.slice(0, 40).toUpperCase(),
+      type: 'custom',
+      dimensions: {},
+      features: [],
+      notes: ['AI generation failed — edit via chat panel'],
+    }, textInput), textInput.slice(0, 40));
     setParsing(false);
   };
 
