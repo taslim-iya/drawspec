@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import type { DrawingSpec, ViewSpec, Shape, Dimension, Label, TitleBlock } from '@/lib/types';
 import { useDrawingStore } from '@/stores/drawingStore';
 
@@ -7,6 +7,25 @@ interface Props {
   width?: number;
   height?: number;
 }
+
+// BS 8888 line weights (in SVG units)
+const LINE = {
+  THICK: 2.0,       // Visible edges, cut outlines
+  MEDIUM: 1.2,      // General visible
+  THIN: 0.5,        // Dimensions, extension, projection
+  EXTRA_THIN: 0.3,  // Hatching, grid, background
+};
+
+// BS 8888 colours
+const CLR = {
+  INK: '#1a1a2e',
+  DIM: '#1a1a2e',
+  CENTERLINE: '#dc2626',
+  CONSTRUCTION: '#94a3b8',
+  WATER: '#3b82f6',
+  HATCH: '#94a3b8',
+  LABEL: '#64748b',
+};
 
 export default function DrawingCanvas({ spec, width = 1200, height = 1600 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -47,6 +66,19 @@ export default function DrawingCanvas({ spec, width = 1200, height = 1600 }: Pro
     URL.revokeObjectURL(url);
   }, [spec]);
 
+  // Export PDF via print
+  const exportPDF = useCallback(() => {
+    if (!svgRef.current) return;
+    const svgData = new XMLSerializer().serializeToString(svgRef.current);
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.write(`<!DOCTYPE html><html><head><title>${spec.titleBlock.drawingNo}</title>
+      <style>@page{size:A3 landscape;margin:0}body{margin:0;display:flex;justify-content:center;align-items:center;height:100vh}</style>
+      </head><body>${svgData}</body></html>`);
+    win.document.close();
+    setTimeout(() => { win.print(); }, 500);
+  }, [spec]);
+
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden bg-white"
       style={{ cursor: isDragging ? 'grabbing' : 'default' }}
@@ -58,7 +90,8 @@ export default function DrawingCanvas({ spec, width = 1200, height = 1600 }: Pro
         <button onClick={() => setZoom(zoom + 0.2)} className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 shadow-sm">+</button>
         <button onClick={() => setZoom(zoom - 0.2)} className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 shadow-sm">−</button>
         <button onClick={() => { setZoom(1); setPan(0, 0); }} className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 shadow-sm">Fit</button>
-        <button onClick={exportSVG} className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-sm">Export SVG</button>
+        <button onClick={exportSVG} className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-sm">SVG</button>
+        <button onClick={exportPDF} className="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 shadow-sm">PDF</button>
       </div>
 
       {/* Zoom indicator */}
@@ -83,32 +116,49 @@ export default function DrawingCanvas({ spec, width = 1200, height = 1600 }: Pro
             <rect width="50" height="50" fill="url(#smallGrid)" />
             <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#e8e8e8" strokeWidth="0.5" />
           </pattern>
-          {/* Arrowhead */}
-          <marker id="arrowStart" viewBox="0 0 10 10" refX="0" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-            <path d="M 10 0 L 0 5 L 10 10 z" fill="#1a1a2e" />
+          {/* BS 8888 compliant arrowheads (3:1 ratio, filled) */}
+          <marker id="arrowStart" viewBox="0 0 12 6" refX="0" refY="3" markerWidth="8" markerHeight="4" orient="auto-start-reverse">
+            <path d="M 12 0 L 0 3 L 12 6 z" fill={CLR.DIM} />
           </marker>
-          <marker id="arrowEnd" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#1a1a2e" />
+          <marker id="arrowEnd" viewBox="0 0 12 6" refX="12" refY="3" markerWidth="8" markerHeight="4" orient="auto">
+            <path d="M 0 0 L 12 3 L 0 6 z" fill={CLR.DIM} />
           </marker>
+          {/* Section cut circle marker */}
+          <marker id="sectionDot" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="10" markerHeight="10">
+            <circle cx="5" cy="5" r="4.5" fill="white" stroke={CLR.INK} strokeWidth="1" />
+          </marker>
+          {/* Hatching pattern (45° lines for general material - BS 8888) */}
+          <pattern id="hatch-general" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke={CLR.HATCH} strokeWidth="0.4" />
+          </pattern>
+          <pattern id="hatch-concrete" patternUnits="userSpaceOnUse" width="8" height="8">
+            <circle cx="2" cy="2" r="0.8" fill={CLR.HATCH} />
+            <circle cx="6" cy="6" r="0.5" fill={CLR.HATCH} />
+            <line x1="0" y1="4" x2="8" y2="4" stroke={CLR.HATCH} strokeWidth="0.3" />
+          </pattern>
+          {/* Chain line pattern for centerlines (long-short-long) */}
+          <pattern id="chainLine" patternUnits="userSpaceOnUse" width="20" height="1">
+            <line x1="0" y1="0.5" x2="12" y2="0.5" stroke={CLR.CENTERLINE} strokeWidth="0.4" />
+            <line x1="14" y1="0.5" x2="18" y2="0.5" stroke={CLR.CENTERLINE} strokeWidth="0.4" />
+          </pattern>
         </defs>
         <rect width={width} height={height} fill="url(#grid)" />
 
-        {/* Drawing border */}
-        <rect x="20" y="20" width={width - 40} height={height - 40} fill="none" stroke="#1a1a2e" strokeWidth="2" />
-        <rect x="25" y="25" width={width - 50} height={height - 50} fill="none" stroke="#1a1a2e" strokeWidth="0.5" />
+        {/* Drawing border (BS 8888: bordered drawing area) */}
+        <rect x="20" y="20" width={width - 40} height={height - 40} fill="none" stroke={CLR.INK} strokeWidth="1.5" />
 
         {/* Views */}
         {spec.views.map((view) => (
           <g key={view.id} transform={`translate(${view.x}, ${view.y})`}>
-            {/* Shapes */}
+            {/* Shapes (structure layer) */}
             {activeLayers.includes('structure') && view.shapes.map((shape, i) => (
-              <RenderShape key={i} shape={shape} />
+              <RenderShape key={`s-${i}`} shape={shape} />
             ))}
-            {/* Dimensions */}
+            {/* Dimensions layer */}
             {activeLayers.includes('dimensions') && view.dimensions.map((dim) => (
               <RenderDimension key={dim.id} dim={dim} />
             ))}
-            {/* Labels */}
+            {/* Labels layer */}
             {activeLayers.includes('labels') && view.labels.map((label) => (
               <RenderLabel key={label.id} label={label} />
             ))}
@@ -117,24 +167,42 @@ export default function DrawingCanvas({ spec, width = 1200, height = 1600 }: Pro
 
         {/* Title Block */}
         <TitleBlockSVG block={spec.titleBlock} canvasWidth={width} canvasHeight={height} />
+
+        {/* Scale bar */}
+        {spec.titleBlock.scale && spec.titleBlock.scale !== 'NTS' && (
+          <g transform={`translate(50, ${height - 50})`}>
+            <text x="0" y="-4" fontSize="7" fill={CLR.LABEL} style={{ fontFamily: 'monospace' }}>ALL DIMENSIONS IN MILLIMETRES</text>
+          </g>
+        )}
       </svg>
     </div>
   );
 }
 
+/* ─── Shape Renderer ─── */
 function RenderShape({ shape }: { shape: Shape }) {
+  // Determine stroke weight based on shape properties
+  const sw = shape.strokeWidth || LINE.MEDIUM;
+  const stroke = shape.stroke || CLR.INK;
+  const dashArray = shape.dashed ? '8,4' : undefined;
+
   switch (shape.type) {
-    case 'circle':
-      return <circle cx={shape.cx} cy={shape.cy} r={shape.r} fill={shape.fill || 'none'} stroke={shape.stroke || '#1a1a2e'} strokeWidth={shape.strokeWidth || 1} strokeDasharray={shape.dashed ? '8,4' : undefined} />;
-    case 'rect':
-      return <rect x={shape.x} y={shape.y} width={shape.w} height={shape.h} fill={shape.fill || 'none'} stroke={shape.stroke || '#1a1a2e'} strokeWidth={shape.strokeWidth || 1} />;
     case 'line':
-      return <line x1={shape.x1} y1={shape.y1} x2={shape.x2} y2={shape.y2} stroke={shape.stroke || '#1a1a2e'} strokeWidth={shape.strokeWidth || 1} strokeDasharray={shape.dashed ? '6,3' : undefined} />;
+      return <line x1={shape.x1} y1={shape.y1} x2={shape.x2} y2={shape.y2}
+        stroke={stroke} strokeWidth={sw} strokeDasharray={dashArray} />;
+    case 'rect':
+      return <rect x={shape.x} y={shape.y} width={shape.w} height={shape.h}
+        fill={shape.fill || 'none'} stroke={stroke} strokeWidth={sw}
+        strokeDasharray={dashArray} />;
+    case 'circle':
+      return <circle cx={shape.cx} cy={shape.cy} r={shape.r}
+        fill={shape.fill || 'none'} stroke={stroke} strokeWidth={sw}
+        strokeDasharray={dashArray} />;
     case 'polyline': {
-      const pts = shape.points.map(([x, y]) => `${x},${y}`).join(' ');
+      const pts = (shape.points || []).map(([x, y]: [number, number]) => `${x},${y}`).join(' ');
       return shape.closed
-        ? <polygon points={pts} fill={shape.fill || 'none'} stroke={shape.stroke || '#1a1a2e'} strokeWidth={shape.strokeWidth || 1} />
-        : <polyline points={pts} fill={shape.fill || 'none'} stroke={shape.stroke || '#1a1a2e'} strokeWidth={shape.strokeWidth || 1} />;
+        ? <polygon points={pts} fill={shape.fill || 'none'} stroke={stroke} strokeWidth={sw} />
+        : <polyline points={pts} fill={shape.fill || 'none'} stroke={stroke} strokeWidth={sw} />;
     }
     case 'arc': {
       const startRad = (shape.startAngle * Math.PI) / 180;
@@ -144,68 +212,90 @@ function RenderShape({ shape }: { shape: Shape }) {
       const x2 = shape.cx + shape.r * Math.cos(endRad);
       const y2 = shape.cy - shape.r * Math.sin(endRad);
       const sweep = ((shape.endAngle - shape.startAngle + 360) % 360) > 180 ? 1 : 0;
-      return <path d={`M ${x1} ${y1} A ${shape.r} ${shape.r} 0 ${sweep} 0 ${x2} ${y2}`} fill="none" stroke={shape.stroke || '#1a1a2e'} strokeWidth={shape.strokeWidth || 1} />;
+      return <path d={`M ${x1} ${y1} A ${shape.r} ${shape.r} 0 ${sweep} 0 ${x2} ${y2}`}
+        fill="none" stroke={stroke} strokeWidth={sw} />;
     }
     case 'text':
-      return <text x={shape.x} y={shape.y} fontSize={shape.fontSize || 12} textAnchor={shape.anchor || 'middle'} fill={shape.fill || '#1a1a2e'} transform={shape.rotate ? `rotate(${shape.rotate}, ${shape.x}, ${shape.y})` : undefined} style={{ fontFamily: 'monospace' }}>{shape.text}</text>;
+      return <text x={shape.x} y={shape.y} fontSize={shape.fontSize || 12}
+        textAnchor={shape.anchor || 'middle'} fill={shape.fill || CLR.INK}
+        transform={shape.rotate ? `rotate(${shape.rotate}, ${shape.x}, ${shape.y})` : undefined}
+        style={{ fontFamily: 'monospace', letterSpacing: '0.05em' }}>{shape.text}</text>;
     default:
       return null;
   }
 }
 
+/* ─── BS 8888 Compliant Dimension Renderer ─── */
 function RenderDimension({ dim }: { dim: Dimension }) {
   const isVertical = Math.abs(dim.x2 - dim.x1) < Math.abs(dim.y2 - dim.y1);
   const midX = (dim.x1 + dim.x2) / 2;
   const midY = (dim.y1 + dim.y2) / 2;
+  const GAP = 3; // Gap between object and extension line (BS 8888)
+  const OVERSHOOT = 3; // Extension line overshoots dimension line
 
   if (isVertical) {
     const ox = dim.offset;
+    const dir = ox > 0 ? 1 : -1;
     return (
       <g className="dimension">
-        {/* Extension lines */}
-        <line x1={dim.x1} y1={dim.y1} x2={dim.x1 + ox} y2={dim.y1} stroke="#1a1a2e" strokeWidth={0.5} />
-        <line x1={dim.x2} y1={dim.y2} x2={dim.x2 + ox} y2={dim.y2} stroke="#1a1a2e" strokeWidth={0.5} />
-        {/* Dimension line with arrows */}
+        {/* Extension lines (with gap from object) */}
+        <line x1={dim.x1 + GAP * dir} y1={dim.y1} x2={dim.x1 + ox + OVERSHOOT * dir} y2={dim.y1}
+          stroke={CLR.DIM} strokeWidth={LINE.THIN} />
+        <line x1={dim.x2 + GAP * dir} y1={dim.y2} x2={dim.x2 + ox + OVERSHOOT * dir} y2={dim.y2}
+          stroke={CLR.DIM} strokeWidth={LINE.THIN} />
+        {/* Dimension line with arrowheads */}
         <line x1={dim.x1 + ox} y1={dim.y1} x2={dim.x2 + ox} y2={dim.y2}
-          stroke="#1a1a2e" strokeWidth={0.7} markerStart="url(#arrowStart)" markerEnd="url(#arrowEnd)" />
-        {/* Text */}
-        <text x={dim.x1 + ox - 8} y={midY} fontSize={10} textAnchor="end" fill="#1a1a2e"
+          stroke={CLR.DIM} strokeWidth={LINE.THIN}
+          markerStart="url(#arrowStart)" markerEnd="url(#arrowEnd)" />
+        {/* Text (rotated, placed left of vertical dim line) */}
+        <rect x={dim.x1 + ox - 14} y={midY - 20} width={12} height={40} fill="white" />
+        <text x={dim.x1 + ox - 8} y={midY} fontSize={9} textAnchor="middle" fill={CLR.DIM}
           transform={`rotate(-90, ${dim.x1 + ox - 8}, ${midY})`}
-          style={{ fontFamily: 'monospace', fontWeight: 600 }}>{dim.text}</text>
+          style={{ fontFamily: 'monospace', fontWeight: 600, letterSpacing: '0.05em' }}>{dim.text}</text>
       </g>
     );
   }
 
   const oy = dim.offset;
+  const dir = oy > 0 ? 1 : -1;
   return (
     <g className="dimension">
-      {/* Extension lines */}
-      <line x1={dim.x1} y1={dim.y1} x2={dim.x1} y2={dim.y1 + oy} stroke="#1a1a2e" strokeWidth={0.5} />
-      <line x1={dim.x2} y1={dim.y2} x2={dim.x2} y2={dim.y2 + oy} stroke="#1a1a2e" strokeWidth={0.5} />
-      {/* Dimension line with arrows */}
+      {/* Extension lines (with gap from object) */}
+      <line x1={dim.x1} y1={dim.y1 + GAP * dir} x2={dim.x1} y2={dim.y1 + oy + OVERSHOOT * dir}
+        stroke={CLR.DIM} strokeWidth={LINE.THIN} />
+      <line x1={dim.x2} y1={dim.y2 + GAP * dir} x2={dim.x2} y2={dim.y2 + oy + OVERSHOOT * dir}
+        stroke={CLR.DIM} strokeWidth={LINE.THIN} />
+      {/* Dimension line with arrowheads */}
       <line x1={dim.x1} y1={dim.y1 + oy} x2={dim.x2} y2={dim.y2 + oy}
-        stroke="#1a1a2e" strokeWidth={0.7} markerStart="url(#arrowStart)" markerEnd="url(#arrowEnd)" />
-      {/* Text */}
-      <rect x={midX - 30} y={dim.y1 + oy - 8} width={60} height={14} fill="white" />
-      <text x={midX} y={dim.y1 + oy + 4} fontSize={10} textAnchor="middle" fill="#1a1a2e"
-        style={{ fontFamily: 'monospace', fontWeight: 600 }}>{dim.text}</text>
+        stroke={CLR.DIM} strokeWidth={LINE.THIN}
+        markerStart="url(#arrowStart)" markerEnd="url(#arrowEnd)" />
+      {/* Text (centered above dimension line, with white background) */}
+      <rect x={midX - 35} y={dim.y1 + oy - 8} width={70} height={14} fill="white" />
+      <text x={midX} y={dim.y1 + oy + 4} fontSize={9} textAnchor="middle" fill={CLR.DIM}
+        style={{ fontFamily: 'monospace', fontWeight: 600, letterSpacing: '0.05em' }}>{dim.text}</text>
     </g>
   );
 }
 
+/* ─── Label Renderer with Leader Lines ─── */
 function RenderLabel({ label }: { label: Label }) {
   const hasLeader = label.leaderX !== undefined && label.leaderY !== undefined;
   return (
     <g className="label">
       {hasLeader && (
-        <line x1={label.x} y1={label.y} x2={label.leaderX!} y2={label.leaderY!}
-          stroke="#64748b" strokeWidth={0.5} markerEnd="url(#arrowEnd)" />
+        <>
+          <line x1={label.x} y1={label.y} x2={label.leaderX!} y2={label.leaderY!}
+            stroke={CLR.LABEL} strokeWidth={LINE.THIN} markerEnd="url(#arrowEnd)" />
+          {/* Small dot at text end of leader */}
+          <circle cx={label.x} cy={label.y} r={1.5} fill={CLR.LABEL} />
+        </>
       )}
-      <text x={label.x} y={label.y - (hasLeader ? 6 : 0)} fontSize={label.fontSize || 11} textAnchor="middle" fill="#1a1a2e"
-        style={{ fontFamily: 'monospace', fontWeight: label.fontSize && label.fontSize >= 14 ? 700 : 500 }}>
+      <text x={label.x} y={label.y - (hasLeader ? 6 : 0)} fontSize={label.fontSize || 11}
+        textAnchor="middle" fill={CLR.INK}
+        style={{ fontFamily: 'monospace', fontWeight: label.fontSize && label.fontSize >= 14 ? 700 : 500, letterSpacing: '0.05em' }}>
         {label.text.includes('\n')
           ? label.text.split('\n').map((line, i) => (
-              <tspan key={i} x={label.x} dy={i === 0 ? 0 : 12}>{line}</tspan>
+              <tspan key={i} x={label.x} dy={i === 0 ? 0 : (label.fontSize || 11) + 2}>{line}</tspan>
             ))
           : label.text}
       </text>
@@ -213,36 +303,49 @@ function RenderLabel({ label }: { label: Label }) {
   );
 }
 
+/* ─── BS 8888 Title Block ─── */
 function TitleBlockSVG({ block, canvasWidth, canvasHeight }: { block: TitleBlock; canvasWidth: number; canvasHeight: number }) {
-  const bx = canvasWidth - 320;
-  const by = canvasHeight - 130;
-  const bw = 290;
-  const bh = 100;
+  const bx = canvasWidth - 340;
+  const by = canvasHeight - 160;
+  const bw = 310;
+  const bh = 120;
 
   return (
     <g>
-      <rect x={bx} y={by} width={bw} height={bh} fill="white" stroke="#1a1a2e" strokeWidth="1.5" />
-      {/* Dividers */}
-      <line x1={bx} y1={by + 25} x2={bx + bw} y2={by + 25} stroke="#1a1a2e" strokeWidth="0.5" />
-      <line x1={bx} y1={by + 50} x2={bx + bw} y2={by + 50} stroke="#1a1a2e" strokeWidth="0.5" />
-      <line x1={bx} y1={by + 75} x2={bx + bw} y2={by + 75} stroke="#1a1a2e" strokeWidth="0.5" />
-      <line x1={bx + 145} y1={by + 50} x2={bx + 145} y2={by + bh} stroke="#1a1a2e" strokeWidth="0.5" />
-      {/* Title */}
-      <text x={bx + bw / 2} y={by + 17} fontSize={11} textAnchor="middle" fill="#1a1a2e" style={{ fontFamily: 'monospace', fontWeight: 700 }}>{block.title}</text>
-      {/* Project */}
-      <text x={bx + bw / 2} y={by + 42} fontSize={9} textAnchor="middle" fill="#64748b" style={{ fontFamily: 'monospace' }}>{block.project}</text>
-      {/* Row 3 */}
-      <text x={bx + 6} y={by + 63} fontSize={7} fill="#94a3b8" style={{ fontFamily: 'monospace' }}>DWG NO</text>
-      <text x={bx + 6} y={by + 73} fontSize={9} fill="#1a1a2e" style={{ fontFamily: 'monospace', fontWeight: 600 }}>{block.drawingNo}</text>
-      <text x={bx + 151} y={by + 63} fontSize={7} fill="#94a3b8" style={{ fontFamily: 'monospace' }}>REV</text>
-      <text x={bx + 151} y={by + 73} fontSize={9} fill="#1a1a2e" style={{ fontFamily: 'monospace', fontWeight: 600 }}>{block.revision}</text>
-      {/* Row 4 */}
-      <text x={bx + 6} y={by + 88} fontSize={7} fill="#94a3b8" style={{ fontFamily: 'monospace' }}>DRAWN BY</text>
-      <text x={bx + 6} y={by + 97} fontSize={9} fill="#1a1a2e" style={{ fontFamily: 'monospace' }}>{block.drawnBy}</text>
-      <text x={bx + 151} y={by + 88} fontSize={7} fill="#94a3b8" style={{ fontFamily: 'monospace' }}>SCALE</text>
-      <text x={bx + 151} y={by + 97} fontSize={9} fill="#1a1a2e" style={{ fontFamily: 'monospace' }}>{block.scale}</text>
-      <text x={bx + 220} y={by + 88} fontSize={7} fill="#94a3b8" style={{ fontFamily: 'monospace' }}>DATE</text>
-      <text x={bx + 220} y={by + 97} fontSize={9} fill="#1a1a2e" style={{ fontFamily: 'monospace' }}>{block.date}</text>
+      {/* Main border (thick) */}
+      <rect x={bx} y={by} width={bw} height={bh} fill="white" stroke={CLR.INK} strokeWidth={LINE.MEDIUM} />
+      
+      {/* Title row */}
+      <line x1={bx} y1={by + 28} x2={bx + bw} y2={by + 28} stroke={CLR.INK} strokeWidth={LINE.THIN} />
+      <text x={bx + bw / 2} y={by + 19} fontSize={12} textAnchor="middle" fill={CLR.INK}
+        style={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: '0.1em' }}>{block.title}</text>
+      
+      {/* Project row */}
+      <line x1={bx} y1={by + 52} x2={bx + bw} y2={by + 52} stroke={CLR.INK} strokeWidth={LINE.THIN} />
+      <text x={bx + 8} y={by + 38} fontSize={7} fill={CLR.CONSTRUCTION} style={{ fontFamily: 'monospace' }}>PROJECT</text>
+      <text x={bx + 8} y={by + 48} fontSize={9} fill={CLR.INK} style={{ fontFamily: 'monospace', fontWeight: 600 }}>{block.project}</text>
+      
+      {/* Drawing No + Rev row */}
+      <line x1={bx} y1={by + 80} x2={bx + bw} y2={by + 80} stroke={CLR.INK} strokeWidth={LINE.THIN} />
+      <line x1={bx + 200} y1={by + 52} x2={bx + 200} y2={by + 80} stroke={CLR.INK} strokeWidth={LINE.THIN} />
+      <text x={bx + 8} y={by + 63} fontSize={7} fill={CLR.CONSTRUCTION} style={{ fontFamily: 'monospace' }}>DRAWING NO.</text>
+      <text x={bx + 8} y={by + 75} fontSize={10} fill={CLR.INK} style={{ fontFamily: 'monospace', fontWeight: 700 }}>{block.drawingNo}</text>
+      <text x={bx + 208} y={by + 63} fontSize={7} fill={CLR.CONSTRUCTION} style={{ fontFamily: 'monospace' }}>REVISION</text>
+      <text x={bx + 208} y={by + 75} fontSize={10} fill={CLR.INK} style={{ fontFamily: 'monospace', fontWeight: 700 }}>{block.revision}</text>
+      
+      {/* Bottom row: Drawn by / Scale / Date */}
+      <line x1={bx + 110} y1={by + 80} x2={bx + 110} y2={by + bh} stroke={CLR.INK} strokeWidth={LINE.THIN} />
+      <line x1={bx + 210} y1={by + 80} x2={bx + 210} y2={by + bh} stroke={CLR.INK} strokeWidth={LINE.THIN} />
+      <text x={bx + 8} y={by + 92} fontSize={7} fill={CLR.CONSTRUCTION} style={{ fontFamily: 'monospace' }}>DRAWN BY</text>
+      <text x={bx + 8} y={by + 106} fontSize={9} fill={CLR.INK} style={{ fontFamily: 'monospace' }}>{block.drawnBy}</text>
+      <text x={bx + 118} y={by + 92} fontSize={7} fill={CLR.CONSTRUCTION} style={{ fontFamily: 'monospace' }}>SCALE</text>
+      <text x={bx + 118} y={by + 106} fontSize={9} fill={CLR.INK} style={{ fontFamily: 'monospace', fontWeight: 600 }}>{block.scale}</text>
+      <text x={bx + 218} y={by + 92} fontSize={7} fill={CLR.CONSTRUCTION} style={{ fontFamily: 'monospace' }}>DATE</text>
+      <text x={bx + 218} y={by + 106} fontSize={9} fill={CLR.INK} style={{ fontFamily: 'monospace' }}>{block.date}</text>
+
+      {/* "ALL DIMS IN MM" note */}
+      <text x={bx + bw / 2} y={by - 6} fontSize={7} textAnchor="middle" fill={CLR.CONSTRUCTION}
+        style={{ fontFamily: 'monospace', letterSpacing: '0.15em' }}>ALL DIMENSIONS IN MILLIMETRES UNLESS NOTED</text>
     </g>
   );
 }
